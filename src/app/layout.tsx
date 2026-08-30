@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
-import Link from "next/link";
+
+import { AppChrome } from "@/components/app-chrome";
 
 import "./globals.css";
 import "./modules.css";
@@ -9,43 +10,11 @@ export const metadata: Metadata = {
   description: "Venue lead, sales, booking, calendar and payment operations",
 };
 
-const navigation = [
-  ["Overview", "/"],
-  ["Prospects", "/prospects"],
-  ["CRM", "/crm"],
-  ["Calendar", "/calendar"],
-  ["Bookings", "/bookings"],
-  ["Payments", "/payments"],
-] as const;
-
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
     <html lang="ko">
       <body>
-        <div className="app-shell">
-          <aside className="sidebar">
-            <div>
-              <div className="brand-mark">V1</div>
-              <div className="brand-copy">
-                <strong>VASSMENT ONE</strong>
-                <span>Booking OS · v0.1</span>
-              </div>
-            </div>
-
-            <nav className="nav-list" aria-label="Primary navigation">
-              {navigation.map(([label, href]) => (
-                <Link key={href} href={href} className="nav-link">
-                  {label}
-                </Link>
-              ))}
-            </nav>
-
-            <div className="sidebar-footer">
-              <span className="status-dot" /> Core foundation
-            </div>
-          </aside>
-          <main className="main-content">{children}</main>
-        </div>
+        <AppChrome>{children}</AppChrome>
       </body>
     </html>
   );
