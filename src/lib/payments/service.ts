@@ -1,18 +1,11 @@
 import { and, eq } from "drizzle-orm";
 
 import { db } from "@/db";
-import {
-  bookings,
-  paymentRequests,
-  paymentTransactions,
-  type paymentKindEnum,
-  type paymentMethodEnum,
-  type transactionTypeEnum,
-} from "@/db/schema";
+import { bookings, paymentRequests, paymentTransactions } from "@/db/schema";
 
-type PaymentKind = (typeof paymentKindEnum.enumValues)[number];
-type PaymentMethod = (typeof paymentMethodEnum.enumValues)[number];
-type TransactionType = (typeof transactionTypeEnum.enumValues)[number];
+type PaymentKind = "deposit" | "interim" | "balance" | "additional";
+type ManualPaymentMethod = "bank_transfer" | "card_offline" | "cash" | "other";
+type TransactionType = "charge" | "refund";
 
 export class PaymentValidationError extends Error {
   constructor(
@@ -61,32 +54,11 @@ export async function createPaymentRequest(params: {
   return request;
 }
 
-async function transactionNetForRequest(
-  tx: Parameters<Parameters<typeof db.transaction>[0]>[0],
-  paymentRequestId: string,
-) {
-  const transactions = await tx
-    .select({
-      type: paymentTransactions.type,
-      amount: paymentTransactions.amount,
-      status: paymentTransactions.status,
-    })
-    .from(paymentTransactions)
-    .where(eq(paymentTransactions.paymentRequestId, paymentRequestId));
-
-  return transactions
-    .filter((item) => item.status === "succeeded")
-    .reduce(
-      (sum, item) => sum + (item.type === "charge" ? item.amount : -item.amount),
-      0,
-    );
-}
-
 export async function recordManualPaymentTransaction(params: {
   bookingId: string;
   paymentRequestId: string;
   type: TransactionType;
-  method: Extract<PaymentMethod, "bank_transfer" | "card_offline" | "cash" | "other">;
+  method: ManualPaymentMethod;
   amount: number;
   approvedAt?: Date;
   reference?: string;
@@ -112,7 +84,22 @@ export async function recordManualPaymentTransaction(params: {
       throw new PaymentValidationError("payment_request_not_found");
     }
 
-    const currentNet = await transactionNetForRequest(tx, request.id);
+    const priorTransactions = await tx
+      .select({
+        type: paymentTransactions.type,
+        amount: paymentTransactions.amount,
+        status: paymentTransactions.status,
+      })
+      .from(paymentTransactions)
+      .where(eq(paymentTransactions.paymentRequestId, request.id));
+
+    const currentNet = priorTransactions
+      .filter((item) => item.status === "succeeded")
+      .reduce(
+        (sum, item) => sum + (item.type === "charge" ? item.amount : -item.amount),
+        0,
+      );
+
     if (params.type === "charge" && currentNet + params.amount > request.amount) {
       throw new PaymentValidationError("overpayment");
     }
