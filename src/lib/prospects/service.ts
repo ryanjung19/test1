@@ -1,6 +1,6 @@
 import { createHash } from "node:crypto";
 
-import { eq } from "drizzle-orm";
+import { eq, sql } from "drizzle-orm";
 
 import { db } from "@/db";
 import { leads, prospects } from "@/db/schema";
@@ -27,8 +27,20 @@ function normalize(value: string | undefined) {
 
 function prospectDedupeKey(item: ProspectInput) {
   if (item.dedupeKey?.trim()) return item.dedupeKey.trim();
-  const material = [normalize(item.companyName), normalize(item.websiteUrl), normalize(item.socialHandle)].join("|");
+  const material = [
+    normalize(item.companyName),
+    normalize(item.websiteUrl),
+    normalize(item.socialHandle),
+  ].join("|");
   return createHash("sha256").update(material).digest("hex");
+}
+
+function normalizeFitScore(value: number | undefined) {
+  if (value === undefined) return undefined;
+  if (!Number.isInteger(value) || value < 0 || value > 100) {
+    throw new Error("invalid_fit_score");
+  }
+  return value;
 }
 
 export async function ingestProspects(items: ProspectInput[]) {
@@ -36,6 +48,7 @@ export async function ingestProspects(items: ProspectInput[]) {
 
   for (const item of items) {
     const dedupeKey = prospectDedupeKey(item);
+    const fitScore = normalizeFitScore(item.fitScore);
     const [row] = await db
       .insert(prospects)
       .values({
@@ -49,7 +62,7 @@ export async function ingestProspects(items: ProspectInput[]) {
         email: item.email?.trim(),
         phone: item.phone?.trim(),
         socialHandle: item.socialHandle?.trim(),
-        fitScore: item.fitScore,
+        fitScore,
         rationale: item.rationale?.trim(),
         evidence: item.evidence,
         dedupeKey,
@@ -64,7 +77,7 @@ export async function ingestProspects(items: ProspectInput[]) {
           email: item.email?.trim(),
           phone: item.phone?.trim(),
           socialHandle: item.socialHandle?.trim(),
-          fitScore: item.fitScore,
+          fitScore,
           rationale: item.rationale?.trim(),
           evidence: item.evidence,
         },
@@ -93,6 +106,10 @@ export async function reviewProspect(params: {
 
 export async function convertProspectToLead(prospectId: string) {
   return db.transaction(async (tx) => {
+    await tx.execute(
+      sql`select pg_advisory_xact_lock(hashtext(${`prospect:${prospectId}`})::bigint)`,
+    );
+
     const [prospect] = await tx
       .select()
       .from(prospects)
@@ -102,6 +119,18 @@ export async function convertProspectToLead(prospectId: string) {
     if (!prospect) throw new Error("prospect_not_found");
     if (prospect.status === "rejected") throw new Error("prospect_rejected");
     if (prospect.status === "converted") throw new Error("prospect_already_converted");
+
+    const notes = [
+      prospect.rationale,
+      prospect.fitScore !== null ? `Fit score: ${prospect.fitScore}/100` : null,
+      prospect.sourceUrl ? `Source: ${prospect.sourceUrl}` : null,
+      prospect.websiteUrl ? `Website: ${prospect.websiteUrl}` : null,
+      prospect.email ? `Email: ${prospect.email}` : null,
+      prospect.phone ? `Phone: ${prospect.phone}` : null,
+      prospect.socialHandle ? `Social: ${prospect.socialHandle}` : null,
+    ]
+      .filter(Boolean)
+      .join("\n");
 
     const [lead] = await tx
       .insert(leads)
@@ -113,10 +142,7 @@ export async function convertProspectToLead(prospectId: string) {
         segment: prospect.segment,
         source: "outbound",
         status: "new",
-        probability: prospect.fitScore ?? undefined,
-        notes: [prospect.rationale, prospect.sourceUrl ? `Source: ${prospect.sourceUrl}` : null]
-          .filter(Boolean)
-          .join("\n") || undefined,
+        notes: notes || undefined,
       })
       .returning();
 
