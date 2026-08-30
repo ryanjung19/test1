@@ -88,8 +88,8 @@ async function main() {
     bookingId: first.booking.id,
     action: "confirm",
   });
-  assert.equal(confirmed.booking.status, "confirmed");
-  assert.equal(confirmed.booking.holdExpiresAt, null);
+  assert.equal(confirmed.status, "confirmed");
+  assert.equal(confirmed.holdExpiresAt, null);
 
   const request = await createPaymentRequest({
     bookingId: first.booking.id,
@@ -198,7 +198,7 @@ async function main() {
     .where(eq(bookings.id, expiring.booking.id));
 
   const expired = await expireDueHolds({ limit: 20 });
-  assert.ok(expired.expiredBookingIds.includes(expiring.booking.id));
+  assert.ok(expired.bookingIds.includes(expiring.booking.id));
 
   const [expiredBooking] = await db
     .select({ status: bookings.status })

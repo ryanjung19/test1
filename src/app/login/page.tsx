@@ -1,10 +1,12 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import { useState, type FormEvent } from "react";
 
 import styles from "./login.module.css";
 
 export default function LoginPage() {
+  const router = useRouter();
   const [password, setPassword] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -31,7 +33,8 @@ export default function LoginPage() {
         return;
       }
 
-      window.location.assign("/");
+      router.replace("/");
+      router.refresh();
     } catch {
       setError("로그인 요청을 처리할 수 없습니다.");
     } finally {
