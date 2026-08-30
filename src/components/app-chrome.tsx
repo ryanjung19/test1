@@ -10,6 +10,7 @@ const navigation = [
   ["CRM", "/crm"],
   ["Calendar", "/calendar"],
   ["Bookings", "/bookings"],
+  ["Quotes", "/quotes"],
   ["Payments", "/payments"],
 ] as const;
 
@@ -45,7 +46,7 @@ export function AdminChrome({ children }: { children: ReactNode }) {
             <Link
               key={href}
               href={href}
-              className={`nav-link${pathname === href ? " nav-link-active" : ""}`}
+              className={`nav-link${pathname === href || (href !== "/" && pathname.startsWith(`${href}/`)) ? " nav-link-active" : ""}`}
             >
               {label}
             </Link>
