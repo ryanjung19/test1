@@ -4,6 +4,7 @@ import { db, isDatabaseConfigured } from "@/db";
 import { bookings, bookingSpaces, paymentRequests, paymentTransactions, spaces } from "@/db/schema";
 import { verifyCustomerPortalToken } from "@/lib/auth/customer-portal";
 import { getCurrentContract } from "@/lib/contracts/service";
+import { tossPaymentsConfigured } from "@/lib/payments/toss-flow";
 import { getLatestCustomerQuote } from "@/lib/quotes/service";
 
 import { acceptQuoteAction } from "./actions";
@@ -54,7 +55,13 @@ function progressIndex(status: string) {
 
 type PageProps = {
   params: Promise<{ id: string }>;
-  searchParams: Promise<{ token?: string; accepted?: string; error?: string }>;
+  searchParams: Promise<{
+    token?: string;
+    accepted?: string;
+    error?: string;
+    payment?: string;
+    code?: string;
+  }>;
 };
 
 export default async function ReservationPortalPage({ params, searchParams }: PageProps) {
@@ -99,6 +106,7 @@ export default async function ReservationPortalPage({ params, searchParams }: Pa
     [4, "행사", stage >= 4 ? "완료" : "예정"],
   ] as const;
   const customerContractVisible = contract && (contract.status === "sent" || contract.status === "signed");
+  const onlinePaymentEnabled = tossPaymentsConfigured();
 
   return (
     <main className={styles.screen}>
@@ -115,6 +123,9 @@ export default async function ReservationPortalPage({ params, searchParams }: Pa
 
         {query.accepted ? <div className="admin-alert admin-alert-success">견적을 승인했습니다. 담당자가 이후 계약/예약 확정 절차를 안내합니다.</div> : null}
         {query.error ? <div className="admin-alert admin-alert-error">견적 승인 요청을 처리하지 못했습니다. 견적 유효기간 또는 링크 상태를 확인해 주세요.</div> : null}
+        {query.payment === "success" ? <div className="admin-alert admin-alert-success">온라인 카드결제가 정상 반영되었습니다.</div> : null}
+        {query.payment === "failed" ? <div className="admin-alert admin-alert-error">결제가 완료되지 않았습니다. 다시 시도하거나 다른 결제수단을 이용해 주세요. {query.code ?? ""}</div> : null}
+        {query.payment === "confirm_failed" ? <div className="admin-alert admin-alert-error">결제 승인 상태를 확인하는 중 문제가 발생했습니다. 중복 결제를 시도하지 말고 담당자에게 문의해 주세요.</div> : null}
 
         <section className={styles.progress} aria-label="예약 진행상태">
           {progress.map(([number, label, detail]) => (
@@ -191,11 +202,16 @@ export default async function ReservationPortalPage({ params, searchParams }: Pa
               {requestRows.length === 0 ? <p className={styles.note}>등록된 결제 요청이 없습니다.</p> : null}
               {requestRows.map((request) => {
                 const paid = Math.max(paidByRequest.get(request.id) ?? 0, 0);
+                const outstanding = Math.max(request.amount - paid, 0);
                 const percent = request.amount > 0 ? Math.min((paid / request.amount) * 100, 100) : 0;
+                const canPayOnline = onlinePaymentEnabled && outstanding > 0 && request.status !== "cancelled";
                 return (
                   <div className={styles.paymentItem} key={request.id}>
                     <div className={styles.paymentItemTop}><div><span>{request.kind}</span><strong>{request.status} · {dateTime(request.dueAt)}</strong></div><b>{krw(paid)} / {krw(request.amount)}</b></div>
                     <div className={styles.paymentBar}><span style={{ width: `${percent}%` }} /></div>
+                    {canPayOnline ? (
+                      <a className="button primary button-link" href={`/reservation/${booking.id}/pay/${request.id}?token=${encodeURIComponent(token ?? "")}`}>카드로 {krw(outstanding)} 결제</a>
+                    ) : null}
                   </div>
                 );
               })}

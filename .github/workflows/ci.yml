@@ -31,11 +31,14 @@ jobs:
 
     env:
       DATABASE_URL: postgresql://postgres:postgres@127.0.0.1:5432/vassment_one_booking
+      APP_URL: http://127.0.0.1:3000
       ADMIN_PASSWORD: ci-only-password
       ADMIN_SESSION_SECRET: ci-only-session-secret-change-in-production-123456
       INTEGRATION_WEBHOOK_SECRET: ci-only-integration-secret
       AUTOMATION_SECRET: ci-only-automation-secret
       CUSTOMER_PORTAL_SECRET: ci-only-customer-portal-secret-change-in-production
+      TOSS_CLIENT_KEY: test_ck_ci
+      TOSS_SECRET_KEY: test_sk_ci
 
     steps:
       - name: Checkout
