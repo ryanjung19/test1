@@ -12,18 +12,37 @@ concurrency:
 jobs:
   validate:
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 20
+
+    services:
+      postgres:
+        image: postgres:17-alpine
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: vassment_one_booking
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d vassment_one_booking"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 20
+
     env:
+      DATABASE_URL: postgresql://postgres:postgres@127.0.0.1:5432/vassment_one_booking
       ADMIN_PASSWORD: ci-only-password
       ADMIN_SESSION_SECRET: ci-only-session-secret-change-in-production-123456
       INTEGRATION_WEBHOOK_SECRET: ci-only-integration-secret
       AUTOMATION_SECRET: ci-only-automation-secret
+      CUSTOMER_PORTAL_SECRET: ci-only-customer-portal-secret-change-in-production
+
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v7
         with:
           node-version: "24.20.0"
 
@@ -35,3 +54,21 @@ jobs:
 
       - name: Build
         run: npm run build
+
+      - name: Generate migration SQL
+        run: |
+          rm -rf drizzle
+          npm run db:generate
+          test -n "$(find drizzle -type f -name '*.sql' -print -quit)"
+
+      - name: Apply schema to PostgreSQL
+        run: npm run db:push
+
+      - name: Bootstrap Vassment One
+        run: psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -f db/bootstrap.sql
+
+      - name: Apply database hardening
+        run: psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -f db/hardening.sql
+
+      - name: Integration smoke test
+        run: npm run test:integration
