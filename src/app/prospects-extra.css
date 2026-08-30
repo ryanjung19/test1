@@ -1,0 +1,166 @@
+.prospect-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 14px;
+}
+
+.prospect-filters a {
+  padding: 7px 10px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: white;
+  color: var(--muted);
+  font-size: 9px;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.prospect-filters .prospect-filter-active {
+  border-color: #111111;
+  background: #111111;
+  color: white;
+}
+
+.prospect-list {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.prospect-card {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  padding: 20px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: white;
+}
+
+.prospect-card-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 18px;
+}
+
+.prospect-card-header h2 {
+  margin: 9px 0 5px;
+  font-size: 18px;
+}
+
+.prospect-card-header p {
+  display: -webkit-box;
+  overflow: hidden;
+  margin: 0;
+  color: var(--muted);
+  font-size: 10px;
+  line-height: 1.55;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+}
+
+.fit-score {
+  display: grid;
+  flex: 0 0 70px;
+  min-height: 70px;
+  place-items: center;
+  padding: 7px;
+  border: 1px solid #deded9;
+  border-radius: 9px;
+  background: #fafaf8;
+}
+
+.fit-score span,
+.fit-score em {
+  color: #8c8c86;
+  font-size: 7px;
+  font-style: normal;
+  font-weight: 800;
+}
+
+.fit-score strong {
+  font-size: 22px;
+  line-height: 1;
+}
+
+.prospect-meta {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1px;
+  overflow: hidden;
+  margin: 16px 0 0;
+  border: 1px solid #ecece8;
+  border-radius: 8px;
+  background: #ecece8;
+}
+
+.prospect-meta > div {
+  min-width: 0;
+  padding: 10px;
+  background: #fafaf8;
+}
+
+.prospect-meta dt {
+  margin-bottom: 4px;
+  color: #8c8c86;
+  font-size: 8px;
+}
+
+.prospect-meta dd {
+  overflow: hidden;
+  margin: 0;
+  font-size: 9px;
+  font-weight: 700;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.prospect-meta a {
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.prospect-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+  margin-top: auto;
+  padding-top: 16px;
+}
+
+.prospect-status-approved,
+.prospect-status-converted {
+  color: #216546;
+}
+
+.prospect-status-rejected {
+  color: #8e3c34;
+}
+
+@media (max-width: 950px) {
+  .prospect-list {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 620px) {
+  .prospect-card-header {
+    flex-direction: column;
+  }
+
+  .fit-score {
+    display: flex;
+    min-height: 0;
+    gap: 5px;
+  }
+
+  .fit-score strong {
+    font-size: 14px;
+  }
+
+  .prospect-meta {
+    grid-template-columns: 1fr;
+  }
+}
