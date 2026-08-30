@@ -54,7 +54,9 @@ APP_URL=http://192.168.123.103:3100
 APP_PORT=3100
 ```
 
-`POSTGRES_PASSWORD` should be long and URL-safe because it is also embedded in `DATABASE_URL`.
+If PostgreSQL was already initialized in `/volume1/docker/vassment-one/postgres`, reuse the exact `POSTGRES_USER`, `POSTGRES_PASSWORD`, and `POSTGRES_DB` values from that first initialization. Changing the container environment later does not change the password of an existing PostgreSQL role.
+
+For a new database, use a long URL-safe PostgreSQL password because it is also embedded in `DATABASE_URL`.
 
 Leave Toss keys empty until the sandbox E2E phase.
 
