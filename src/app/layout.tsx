@@ -5,7 +5,7 @@ import "./globals.css";
 import "./modules.css";
 
 export const metadata: Metadata = {
-  title: "Basement One Booking OS",
+  title: "Vassment One Booking OS",
   description: "Venue lead, sales, booking, calendar and payment operations",
 };
 
@@ -25,9 +25,9 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
         <div className="app-shell">
           <aside className="sidebar">
             <div>
-              <div className="brand-mark">B1</div>
+              <div className="brand-mark">V1</div>
               <div className="brand-copy">
-                <strong>BASEMENT ONE</strong>
+                <strong>VASSMENT ONE</strong>
                 <span>Booking OS · v0.1</span>
               </div>
             </div>
