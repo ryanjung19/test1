@@ -10,6 +10,10 @@ import {
   PaymentValidationError,
   recordManualPaymentTransaction,
 } from "@/lib/payments/service";
+import {
+  refundTossOnlinePayment,
+  TossRefundError,
+} from "@/lib/payments/toss-refund";
 
 const requestSchema = z.object({
   bookingId: z.string().uuid(),
@@ -30,6 +34,12 @@ const transactionSchema = z.object({
   memo: z.string().trim().max(5_000),
 });
 
+const tossRefundSchema = z.object({
+  transactionId: z.string().uuid(),
+  amount: z.coerce.number().int().positive(),
+  reason: z.string().trim().min(1).max(200),
+});
+
 function seoulLocalInput(value: string) {
   if (!value) return undefined;
   const normalized = value.length === 16 ? `${value}:00` : value;
@@ -43,6 +53,7 @@ async function requireAdmin() {
 
 function errorCode(error: unknown) {
   if (error instanceof PaymentValidationError) return error.code;
+  if (error instanceof TossRefundError) return error.code;
   if (error instanceof z.ZodError) return "invalid_request";
   return "internal_error";
 }
@@ -84,6 +95,21 @@ export async function recordPaymentTransactionAction(formData: FormData) {
       reference: payload.reference || undefined,
       memo: payload.memo || undefined,
     });
+  } catch (error) {
+    destination = `/payments?error=${encodeURIComponent(errorCode(error))}`;
+  }
+
+  revalidatePath("/payments");
+  redirect(destination);
+}
+
+export async function refundTossPaymentAction(formData: FormData) {
+  await requireAdmin();
+  let destination = "/payments?updated=1";
+
+  try {
+    const payload = tossRefundSchema.parse(Object.fromEntries(formData));
+    await refundTossOnlinePayment(payload);
   } catch (error) {
     destination = `/payments?error=${encodeURIComponent(errorCode(error))}`;
   }
