@@ -6,25 +6,26 @@ import {
   TossReconciliationError,
 } from "@/lib/payments/toss-reconcile";
 
-const webhookSchema = z.object({
+const envelopeSchema = z.object({
   eventType: z.string(),
   createdAt: z.string().optional(),
-  data: z.object({
-    paymentKey: z.string().min(1),
-  }).passthrough(),
+  data: z.unknown(),
+}).passthrough();
+
+const paymentDataSchema = z.object({
+  paymentKey: z.string().min(1),
 }).passthrough();
 
 export async function POST(request: Request) {
   try {
-    const event = webhookSchema.parse(await request.json());
+    const event = envelopeSchema.parse(await request.json());
 
     if (event.eventType !== "PAYMENT_STATUS_CHANGED") {
       return NextResponse.json({ status: "ignored" });
     }
 
-    const result = await reconcileTossPayment({
-      paymentKey: event.data.paymentKey,
-    });
+    const data = paymentDataSchema.parse(event.data);
+    const result = await reconcileTossPayment({ paymentKey: data.paymentKey });
 
     return NextResponse.json({ status: "ok", result });
   } catch (error) {
@@ -36,8 +37,9 @@ export async function POST(request: Request) {
       error instanceof TossReconciliationError &&
       error.code === "local_transaction_not_found"
     ) {
-      // The merchant account can have unrelated/legacy payments. A verified Toss
-      // payment that is not part of this Booking OS should not trigger retries.
+      // The same Toss merchant account can contain unrelated or legacy payments.
+      // Once Toss itself verified the payment, an unknown local transaction should
+      // not create an endless webhook retry loop.
       return NextResponse.json({ status: "ignored", reason: error.code });
     }
 

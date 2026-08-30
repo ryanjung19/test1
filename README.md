@@ -1,6 +1,6 @@
 # Vassment One Booking OS
 
-Venue prospecting, sales CRM, booking calendar, customer reservation and payment operations for VASSMENT ONE.
+Venue prospecting, sales CRM, booking calendar, customer reservation, quote/contract and payment operations for VASSMENT ONE.
 
 ## Current implementation status
 
@@ -9,21 +9,31 @@ Venue prospecting, sales CRM, booking calendar, customer reservation and payment
 - protected single-admin Booking OS session
 - responsive public customer reservation module at `/reserve`
 - privacy-safe public availability lookup for 1F / B1
-- website inquiry intake -> CRM lead + inquiry booking
+- website inquiry -> CRM lead + inquiry booking
 - administrator direct booking creation
-- website inquiry -> HOLD promotion
-- HOLD extension -> confirmed booking -> completed / cancelled lifecycle
+- inquiry -> HOLD promotion
+- HOLD extension -> confirmed -> completed / cancelled lifecycle
 - automatic HOLD expiry service + protected job endpoint
-- B1 / 1F / B1+1F transactional conflict prevention
+- B1 / 1F / B1+1F transaction-level conflict prevention
 - setup / booking / teardown physical occupancy blocks
-- manual internal-event / maintenance schedule blocks
+- manual internal-event / maintenance blocks
 - live weekly administrator calendar
-- manual payment requests: deposit / interim / balance / additional
-- manual receipt/refund transactions: bank transfer / cash / offline card / other
+- raw prospect ingest / dedupe / review / CRM conversion
+- CRM lead status + phone/email/Kakao/SNS/note interaction capture
+- versioned quote editor + customer-visible sent quote + customer acceptance
+- contract status + external e-sign document URL management
+- signed/expiring customer reservation portal
+- deposit / interim / balance / additional payment requests
+- bank transfer / cash / offline card manual ledger
+- online Toss Payments card flow using server-calculated outstanding amount
+- Toss success confirmation with server-side amount/order validation and idempotency
+- Toss partial/full card refund flow
+- Toss `PAYMENT_STATUS_CHANGED` webhook reconciliation via provider re-query
 - payment request paid / partially-paid / overdue state recalculation
 - trusted integration availability + booking APIs for the existing chatbot/backend
+- `/api/health` deployment readiness endpoint
 
-### Core data model already present
+### Core data model
 
 - organizations / venues / spaces / members
 - prospects / customers / contacts / leads / interactions
@@ -32,22 +42,47 @@ Venue prospecting, sales CRM, booking calendar, customer reservation and payment
 - payment_requests / payment_transactions
 - audit_logs
 
-### Still to implement before production launch
+## CI / integration validation
 
-- generated/reviewed production DB migrations and provisioning
-- multi-user member/RBAC login (current UI intentionally uses one administrator password)
-- live prospect finder and review queue
-- full CRM list/detail/interaction CRUD
-- quote editor, quote customer view and PDF document generation
-- contract/e-sign integration
-- Toss Payments online card + webhook
-- virtual-account reconciliation if required
-- public inquiry rate limiting / bot protection at deployment edge
-- customer reservation-detail portal after inquiry/HOLD
-- email / Kakao / SNS adapters and notification delivery
-- operational analytics / attribution
-- production monitoring, backup and deployment
-- actual insertion into the existing Vassment One website
+The pull-request CI uses a real PostgreSQL 17 service and validates:
+
+1. dependency installation
+2. ESLint
+3. Next.js production build + TypeScript
+4. Drizzle migration SQL generation
+5. schema application to PostgreSQL
+6. Vassment One bootstrap data
+7. PostgreSQL GiST booking-conflict hardening
+8. booking overlap prevention
+9. HOLD -> confirmed lifecycle
+10. manual partial receipt/refund
+11. prospect dedupe + CRM conversion
+12. HOLD auto-expiry
+13. Toss card intent + mocked official confirm protocol
+14. Toss partial refund + mocked official cancel protocol
+15. Toss webhook provider re-query + idempotent reconciliation
+
+No real Toss key or real payment is used in CI.
+
+## Remaining before production launch
+
+- move to a PRIVATE operational repository before adding live data/secrets
+- provision production PostgreSQL
+- generate, review and retain production migration files
+- production backup/restore setup and restore drill
+- deploy application to an HTTPS production domain
+- actual insertion of `/reserve` into the current Vassment One website
+- actual existing-chatbot API connection
+- actual Toss test-key sandbox E2E, webhook registration, then live-key transition
+- edge rate limiting / bot protection for admin login and public inquiry
+- actual prospect discovery provider
+- email / Kakao / SNS adapters
+- external e-sign provider API automation if required
+- multi-user RBAC if additional operators are added
+- production monitoring / alerting
+- operational analytics / attribution dashboard
+
+See [`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md) for the production release gate.
 
 ## Technology baseline
 
@@ -55,11 +90,9 @@ Venue prospecting, sales CRM, booking calendar, customer reservation and payment
 - Next.js 16.3.3
 - React / React DOM 19.2.8
 - TypeScript 6.0.3
-- PostgreSQL
+- PostgreSQL 17 compatible
 - Drizzle ORM 0.45.2
 - Zod 4.5.4
-
-The package versions are intentionally pinned for the initial baseline.
 
 ## Local setup
 
@@ -69,32 +102,31 @@ npm install
 npm run db:generate
 npm run db:migrate
 psql "$DATABASE_URL" -f db/bootstrap.sql
-```
-
-Recommended database hardening after migrations:
-
-```bash
 psql "$DATABASE_URL" -f db/hardening.sql
-```
-
-Then:
-
-```bash
 npm run dev
 ```
 
-Required application secrets are documented in `.env.example`:
+Do not use `db:push --force` against production. Production schema changes must use reviewed migrations.
 
-- `ADMIN_PASSWORD`
-- `ADMIN_SESSION_SECRET`
-- `INTEGRATION_WEBHOOK_SECRET`
-- `AUTOMATION_SECRET`
+## Required secrets / configuration
 
-Do not commit production secret values.
+See `.env.example`.
+
+```text
+DATABASE_URL
+APP_URL
+ADMIN_PASSWORD
+ADMIN_SESSION_SECRET
+CUSTOMER_PORTAL_SECRET
+INTEGRATION_WEBHOOK_SECRET
+AUTOMATION_SECRET
+TOSS_CLIENT_KEY
+TOSS_SECRET_KEY
+```
+
+Never commit production values.
 
 ## Initial Vassment One IDs
-
-The bootstrap file uses stable initial IDs so external integrations can be wired before an admin settings UI exists.
 
 ```text
 Organization  00000000-0000-0000-0000-000000000001
@@ -113,126 +145,109 @@ Public route:
 /reserve
 ```
 
-The module is responsive for PC/mobile and is designed to be mounted inside the existing Vassment One website shell.
+Designed for insertion into the existing Vassment One website on both PC and mobile.
 
 Customer flow:
 
-`space -> date/time -> availability -> event information -> contact information -> inquiry reference`
+`space -> date/time -> availability -> event information -> contact information -> inquiry`
 
-The public UI never returns another customer's identity, internal HOLD details or internal booking data.
+The public availability endpoint never returns another customer's identity, HOLD owner or internal booking details.
 
-### Public availability
+## Customer reservation portal
 
-```http
-GET /api/public/availability?spaces=1F,B1&from=2026-09-12T18:00:00+09:00&to=2026-09-12T23:00:00+09:00
+Signed route:
+
+```text
+/reservation/<booking-id>?token=<signed-token>
 ```
 
-Public output only exposes availability booleans.
+The portal can show:
 
-### Public inquiry
+- reservation status
+- HOLD expiration
+- latest customer-visible quote
+- quote acceptance
+- customer-visible contract link/status
+- payment requests and paid/outstanding amounts
+- online card payment button when Toss is configured
 
-```http
-POST /api/public/inquiries
-Content-Type: application/json
-```
-
-The inquiry creates both a website-source sales lead and an `inquiry` booking. It does not block the venue until an administrator promotes it to HOLD.
+The portal token is signed and expiring. It is not sent to Toss success/fail URLs.
 
 ## Administrator Booking OS
 
-Administrator routes require an HttpOnly signed session cookie created by `/api/auth/login`.
-
-Current operational screens:
+Current operational areas:
 
 - `/` overview
-- `/calendar` live B1 / 1F schedule and manual blocks
-- `/bookings` inquiry / HOLD / confirmed booking operations
-- `/payments` payment requests, manual receipts and refunds
-- `/prospects` model/shell
-- `/crm` model/shell
+- `/calendar`
+- `/bookings`
+- `/payments`
+- `/prospects`
+- `/crm`
+- booking quote/contract detail screens
 
-The current initial deployment auth is intentionally a single strong administrator password. The schema already contains members/roles so multi-user RBAC can replace it later.
+Current auth is intentionally a single strong administrator password. The data model already contains members/roles for future multi-user RBAC.
 
 ## HOLD automation
-
-Protected job endpoint:
 
 ```http
 POST /api/jobs/expire-holds
 x-automation-secret: <AUTOMATION_SECRET>
 ```
 
-The job re-checks each due HOLD while holding booking/space transaction locks, cancels expired bookings and releases their active schedule blocks.
+The job re-checks due HOLDs under transaction locks, cancels expired bookings and releases active schedule blocks.
 
 ## Trusted integration API
 
-Trusted backend/chatbot calls require:
+Existing chatbot/backend requests use:
 
 ```text
 x-integration-secret: <INTEGRATION_WEBHOOK_SECRET>
 ```
 
-### Availability with internal conflict details
+Main endpoints:
 
-```http
-GET /api/availability?spaceIds=<uuid>,<uuid>&from=2026-09-12T09:00:00+09:00&to=2026-09-12T23:00:00+09:00
+```text
+GET   /api/availability
+POST  /api/bookings
+PATCH /api/bookings/<booking-id>
 ```
 
-### Create booking
+The existing chatbot remains a channel adapter. Booking OS remains the Source of Truth.
 
-```http
-POST /api/bookings
-Content-Type: application/json
-x-integration-secret: ...
+## Toss Payments
+
+Customer card flow:
+
+`payment request -> server-created pending intent -> Toss V2 checkout -> success redirect -> server confirm -> internal ledger`
+
+Key invariants:
+
+- payable amount is computed from the server ledger
+- browser-returned orderId/amount must match the stored intent
+- confirm/cancel POST requests use stable idempotency keys
+- raw PAN/CVC/card expiry is never stored
+- successful refunds are written only after Toss cancellation succeeds
+- `PAYMENT_STATUS_CHANGED` webhook is verified by re-querying Toss with `paymentKey`
+- repeated webhooks only reconcile the missing delta and do not duplicate refunds
+
+Webhook route:
+
+```text
+POST /api/webhooks/toss
 ```
 
-### Booking lifecycle
+Register `PAYMENT_STATUS_CHANGED` in the Toss developer console before production.
 
-```http
-PATCH /api/bookings/<booking-uuid>
-Content-Type: application/json
-x-integration-secret: ...
+## Health
+
+```text
+GET /api/health
 ```
 
-Supported actions:
+Returns HTTP 200 only when the DB is reachable and required production secrets are configured. Otherwise it returns 503.
 
-- `confirm`
-- `extend_hold`
-- `cancel`
-- `complete`
+## Architecture / deployment
 
-## Payment model
-
-Booking status and payment status remain independent.
-
-One booking can have multiple requests:
-
-- deposit
-- interim payment
-- balance
-- additional charge
-
-Each request can have multiple charge/refund transactions.
-
-Current working manual methods:
-
-- bank transfer
-- cash
-- offline card terminal
-- other/manual
-
-Online card remains planned for Toss Payments. Raw card PAN, expiration date and CVC must never be stored by this application.
-
-## Existing chatbot
-
-The chatbot already exists and remains a channel adapter, not a second booking database.
-
-Expected integration path:
-
-`Chatbot -> Availability API -> lead/booking request -> Booking Core -> status/payment APIs`
-
-## Architecture
-
-See [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md).
-
-For Codex / coding-agent work, see [`AGENTS.md`](AGENTS.md).
+- [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md)
+- [`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md)
+- [`AGENTS.md`](AGENTS.md)

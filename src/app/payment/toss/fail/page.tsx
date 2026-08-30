@@ -19,18 +19,20 @@ export default async function TossFailPage({ searchParams }: PageProps) {
     return <main style={{ padding: 32 }}><h1>결제가 취소되었거나 실패했습니다.</h1></main>;
   }
 
+  let returnUrl: string | null = null;
   try {
     const result = await cancelTossPaymentIntent({
       intentId: query.intentId,
       code: query.code,
       message: query.message,
     });
-    const returnUrl = customerPortalUrl(result.bookingId);
-    if (returnUrl) {
-      redirect(`${returnUrl}&payment=failed&code=${encodeURIComponent(query.code ?? "PAYMENT_FAILED")}`);
-    }
+    returnUrl = customerPortalUrl(result.bookingId);
   } catch (error) {
     console.error(error);
+  }
+
+  if (returnUrl) {
+    redirect(`${returnUrl}&payment=failed&code=${encodeURIComponent(query.code ?? "PAYMENT_FAILED")}`);
   }
 
   return (
