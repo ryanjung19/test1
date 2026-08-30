@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 
 import { db, isDatabaseConfigured } from "@/db";
 import { bookings, quoteItems, quotes } from "@/db/schema";
+import { customerPortalUrl } from "@/lib/auth/customer-portal";
 
 import { updateQuoteStatusAction } from "./actions";
 import { QuoteEditor } from "./quote-editor";
@@ -69,6 +70,7 @@ export default async function QuotePage({ params, searchParams }: PageProps) {
         .where(eq(quoteItems.quoteId, quoteIds[0]))
         .orderBy(asc(quoteItems.sortOrder))
     : [];
+  const portalLink = customerPortalUrl(booking.id);
 
   return (
     <div className="page-wrap">
@@ -81,20 +83,19 @@ export default async function QuotePage({ params, searchParams }: PageProps) {
           </p>
         </div>
         <div className="header-actions">
+          {portalLink ? <a className="button primary button-link" href={portalLink} target="_blank" rel="noreferrer">고객 예약 페이지</a> : null}
           <a className="button secondary button-link" href="/bookings">예약 목록</a>
         </div>
       </header>
 
+      {!portalLink ? <div className="admin-alert admin-alert-warning">CUSTOMER_PORTAL_SECRET 설정 후 고객 예약 상세 링크가 생성됩니다.</div> : null}
       {query.error ? <div className="admin-alert admin-alert-error">견적 처리 실패: {query.error}</div> : null}
       {query.created ? <div className="admin-alert admin-alert-success">새 견적 버전을 저장했습니다.</div> : null}
       {query.updated ? <div className="admin-alert admin-alert-success">견적 상태를 변경했습니다.</div> : null}
 
       <section className="panel quote-create-panel">
         <div className="panel-heading">
-          <div>
-            <p className="eyebrow">NEW VERSION</p>
-            <h2>견적 작성</h2>
-          </div>
+          <div><p className="eyebrow">NEW VERSION</p><h2>견적 작성</h2></div>
         </div>
         <QuoteEditor bookingId={booking.id} />
       </section>
