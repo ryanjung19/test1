@@ -1,0 +1,69 @@
+name: vassment-one
+
+services:
+  postgres:
+    image: postgres:17-alpine
+    container_name: vassment-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:?POSTGRES_USER is required}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is required}
+      POSTGRES_DB: ${POSTGRES_DB:?POSTGRES_DB is required}
+    volumes:
+      - ${VASSMENT_DATA_ROOT:-/volume1/docker/vassment-one}/postgres:/var/lib/postgresql/data
+    shm_size: 256mb
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
+      interval: 10s
+      timeout: 5s
+      retries: 20
+    networks:
+      - internal
+
+  schema-init:
+    build:
+      context: ../..
+      dockerfile: Dockerfile
+      target: dbtools
+    container_name: vassment-schema-init
+    restart: "no"
+    environment:
+      DATABASE_URL: ${DATABASE_URL:?DATABASE_URL is required}
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - internal
+
+  app:
+    build:
+      context: ../..
+      dockerfile: Dockerfile
+      target: app
+    container_name: vassment-app
+    restart: unless-stopped
+    ports:
+      - "${APP_BIND_ADDRESS:-0.0.0.0}:${APP_PORT:-3100}:3000"
+    environment:
+      NODE_ENV: production
+      DATABASE_URL: ${DATABASE_URL:?DATABASE_URL is required}
+      APP_URL: ${APP_URL:?APP_URL is required}
+      DEFAULT_TIMEZONE: ${DEFAULT_TIMEZONE:-Asia/Seoul}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD:?ADMIN_PASSWORD is required}
+      ADMIN_SESSION_SECRET: ${ADMIN_SESSION_SECRET:?ADMIN_SESSION_SECRET is required}
+      CUSTOMER_PORTAL_SECRET: ${CUSTOMER_PORTAL_SECRET:?CUSTOMER_PORTAL_SECRET is required}
+      INTEGRATION_WEBHOOK_SECRET: ${INTEGRATION_WEBHOOK_SECRET:?INTEGRATION_WEBHOOK_SECRET is required}
+      AUTOMATION_SECRET: ${AUTOMATION_SECRET:?AUTOMATION_SECRET is required}
+      TOSS_CLIENT_KEY: ${TOSS_CLIENT_KEY:-}
+      TOSS_SECRET_KEY: ${TOSS_SECRET_KEY:-}
+    depends_on:
+      postgres:
+        condition: service_healthy
+      schema-init:
+        condition: service_completed_successfully
+    networks:
+      - internal
+
+networks:
+  internal:
+    name: vassment-one-internal
