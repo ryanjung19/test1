@@ -17,7 +17,10 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 15
     env:
-      INTEGRATION_WEBHOOK_SECRET: ci-only-secret
+      ADMIN_PASSWORD: ci-only-password
+      ADMIN_SESSION_SECRET: ci-only-session-secret-change-in-production-123456
+      INTEGRATION_WEBHOOK_SECRET: ci-only-integration-secret
+      AUTOMATION_SECRET: ci-only-automation-secret
     steps:
       - name: Checkout
         uses: actions/checkout@v4
