@@ -1,13 +1,7 @@
 import { timingSafeEqual } from "node:crypto";
 
-export function verifyIntegrationSecret(request: Request) {
-  const expected = process.env.INTEGRATION_WEBHOOK_SECRET;
-
-  if (!expected) {
-    throw new Error("INTEGRATION_WEBHOOK_SECRET is not configured");
-  }
-
-  const provided = request.headers.get("x-integration-secret");
+function safeEqual(provided: string | null, expected: string | undefined) {
+  if (!expected) return null;
   if (!provided) return false;
 
   const providedBuffer = Buffer.from(provided);
@@ -17,4 +11,30 @@ export function verifyIntegrationSecret(request: Request) {
     providedBuffer.length === expectedBuffer.length &&
     timingSafeEqual(providedBuffer, expectedBuffer)
   );
+}
+
+export function verifyIntegrationSecret(request: Request) {
+  const result = safeEqual(
+    request.headers.get("x-integration-secret"),
+    process.env.INTEGRATION_WEBHOOK_SECRET,
+  );
+
+  if (result === null) {
+    throw new Error("INTEGRATION_WEBHOOK_SECRET is not configured");
+  }
+
+  return result;
+}
+
+export function verifyAutomationSecret(request: Request) {
+  const result = safeEqual(
+    request.headers.get("x-automation-secret"),
+    process.env.AUTOMATION_SECRET,
+  );
+
+  if (result === null) {
+    throw new Error("AUTOMATION_SECRET is not configured");
+  }
+
+  return result;
 }
