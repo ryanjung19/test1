@@ -75,3 +75,6 @@ jobs:
 
       - name: Integration smoke test
         run: npm run test:integration
+
+      - name: Toss webhook reconciliation smoke test
+        run: npx tsx scripts/toss-reconciliation-smoke.ts
