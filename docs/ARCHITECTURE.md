@@ -1,4 +1,4 @@
-# Basement One Booking OS — Architecture v0.1
+# Vassment One Booking OS — Architecture v0.1
 
 ## Product boundary
 
@@ -123,7 +123,7 @@ The initial provider plan is Toss Payments direct integration, while `provider` 
 
 ## Multi-tenant boundary
 
-The schema starts with `organizations -> venues -> spaces` even though v0.1 operates Basement One only.
+The schema starts with `organizations -> venues -> spaces` even though v0.1 operates Vassment One only.
 
 Reason: the cost is small now and it preserves the option to turn the system into a multi-venue SaaS later without redesigning the core booking and CRM schema.
 
