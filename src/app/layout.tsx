@@ -4,6 +4,7 @@ import "./globals.css";
 import "./modules.css";
 import "./admin-extra.css";
 import "./crm-extra.css";
+import "./prospects-extra.css";
 
 export const metadata: Metadata = {
   title: "Vassment One",
