@@ -1,0 +1,544 @@
+.screen {
+  min-height: 100vh;
+  background: #f5f4f0;
+  color: #111111;
+}
+
+.frame {
+  width: min(1240px, calc(100% - 48px));
+  margin: 0 auto;
+  padding: 28px 0 64px;
+}
+
+.topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  padding: 8px 0 28px;
+  border-bottom: 1px solid #d9d7d1;
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.mark {
+  display: grid;
+  width: 40px;
+  height: 40px;
+  place-items: center;
+  background: #111111;
+  color: #ffffff;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+}
+
+.brandText {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.brandText strong {
+  font-size: 13px;
+  letter-spacing: 0.05em;
+}
+
+.brandText span,
+.topMeta {
+  color: #77756f;
+  font-size: 11px;
+}
+
+.hero {
+  display: grid;
+  grid-template-columns: minmax(0, 1.25fr) minmax(280px, 0.75fr);
+  gap: 42px;
+  padding: 54px 0 32px;
+}
+
+.eyebrow {
+  margin: 0 0 12px;
+  color: #77756f;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.16em;
+}
+
+.hero h1 {
+  max-width: 760px;
+  margin: 0;
+  font-size: clamp(36px, 6vw, 72px);
+  font-weight: 620;
+  letter-spacing: -0.06em;
+  line-height: 0.98;
+}
+
+.heroCopy {
+  align-self: end;
+  margin: 0;
+  color: #5f5d58;
+  font-size: 14px;
+  line-height: 1.7;
+}
+
+.progress {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  margin-bottom: 14px;
+}
+
+.progressItem {
+  padding: 11px 12px;
+  border: 1px solid #d9d7d1;
+  border-radius: 8px;
+  color: #8a8882;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+}
+
+.progressActive {
+  border-color: #111111;
+  background: #111111;
+  color: #ffffff;
+}
+
+.layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1.55fr) minmax(300px, 0.65fr);
+  gap: 18px;
+  align-items: start;
+}
+
+.panel,
+.summary {
+  border: 1px solid #d9d7d1;
+  border-radius: 14px;
+  background: #ffffff;
+}
+
+.panel {
+  padding: 30px;
+}
+
+.summary {
+  position: sticky;
+  top: 24px;
+  padding: 24px;
+}
+
+.sectionHeader {
+  margin-bottom: 24px;
+}
+
+.sectionHeader h2 {
+  margin: 0 0 7px;
+  font-size: 24px;
+  letter-spacing: -0.04em;
+}
+
+.sectionHeader p {
+  margin: 0;
+  color: #77756f;
+  font-size: 12px;
+  line-height: 1.6;
+}
+
+.spaceGrid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+  margin-bottom: 26px;
+}
+
+.spaceCard {
+  min-height: 110px;
+  padding: 16px;
+  border: 1px solid #d9d7d1;
+  border-radius: 10px;
+  background: #faf9f6;
+  text-align: left;
+  cursor: pointer;
+}
+
+.spaceCard strong,
+.spaceCard span {
+  display: block;
+}
+
+.spaceCard strong {
+  margin-bottom: 7px;
+  font-size: 17px;
+}
+
+.spaceCard span {
+  color: #77756f;
+  font-size: 11px;
+  line-height: 1.5;
+}
+
+.spaceCardSelected {
+  border-color: #111111;
+  background: #111111;
+  color: #ffffff;
+}
+
+.spaceCardSelected span {
+  color: #c9c7c1;
+}
+
+.fieldGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.fieldFull {
+  grid-column: 1 / -1;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+
+.field label {
+  color: #55534f;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.field input,
+.field select,
+.field textarea {
+  width: 100%;
+  border: 1px solid #d7d5cf;
+  border-radius: 8px;
+  background: #ffffff;
+  color: #111111;
+  font: inherit;
+  font-size: 13px;
+  outline: none;
+}
+
+.field input,
+.field select {
+  height: 46px;
+  padding: 0 12px;
+}
+
+.field textarea {
+  min-height: 120px;
+  padding: 12px;
+  resize: vertical;
+}
+
+.field input:focus,
+.field select:focus,
+.field textarea:focus {
+  border-color: #111111;
+}
+
+.availabilityBox {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  margin-top: 22px;
+  padding: 16px 18px;
+  border: 1px solid #d9d7d1;
+  border-radius: 10px;
+  background: #f8f7f3;
+}
+
+.availabilityText {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.availabilityText strong {
+  font-size: 13px;
+}
+
+.availabilityText span {
+  color: #77756f;
+  font-size: 11px;
+}
+
+.statusAvailable {
+  color: #1b6a43;
+}
+
+.statusUnavailable {
+  color: #9a3e33;
+}
+
+.actions {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  margin-top: 28px;
+  padding-top: 22px;
+  border-top: 1px solid #ebe9e3;
+}
+
+.button {
+  min-height: 44px;
+  padding: 0 18px;
+  border-radius: 8px;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.primary {
+  border: 1px solid #111111;
+  background: #111111;
+  color: #ffffff;
+}
+
+.secondary {
+  border: 1px solid #d1cfc9;
+  background: #ffffff;
+  color: #111111;
+}
+
+.button:disabled {
+  cursor: not-allowed;
+  opacity: 0.45;
+}
+
+.summary h3 {
+  margin: 0 0 20px;
+  font-size: 15px;
+  letter-spacing: -0.02em;
+}
+
+.summaryRows {
+  margin: 0;
+}
+
+.summaryRow {
+  display: grid;
+  grid-template-columns: 92px minmax(0, 1fr);
+  gap: 12px;
+  padding: 12px 0;
+  border-top: 1px solid #eceae5;
+}
+
+.summaryRow:first-child {
+  border-top: 0;
+}
+
+.summaryRow dt {
+  color: #8a8882;
+  font-size: 10px;
+}
+
+.summaryRow dd {
+  margin: 0;
+  text-align: right;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.summaryNote {
+  margin: 18px 0 0;
+  padding-top: 16px;
+  border-top: 1px solid #eceae5;
+  color: #8a8882;
+  font-size: 10px;
+  line-height: 1.6;
+}
+
+.success {
+  padding: 52px 30px;
+  text-align: center;
+}
+
+.successMark {
+  display: grid;
+  width: 50px;
+  height: 50px;
+  margin: 0 auto 20px;
+  place-items: center;
+  border-radius: 50%;
+  background: #111111;
+  color: #ffffff;
+  font-weight: 800;
+}
+
+.success h2 {
+  margin: 0 0 10px;
+  font-size: 28px;
+  letter-spacing: -0.04em;
+}
+
+.success p {
+  margin: 0 auto;
+  color: #77756f;
+  font-size: 12px;
+  line-height: 1.7;
+}
+
+.reference {
+  display: inline-block;
+  margin-top: 22px;
+  padding: 12px 16px;
+  border: 1px solid #d9d7d1;
+  border-radius: 8px;
+  background: #f8f7f3;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.error {
+  margin-top: 14px;
+  padding: 11px 13px;
+  border: 1px solid #e0b9b3;
+  border-radius: 8px;
+  background: #fff7f5;
+  color: #8a3228;
+  font-size: 11px;
+  line-height: 1.5;
+}
+
+.honeypot {
+  position: absolute;
+  left: -10000px;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+}
+
+@media (max-width: 900px) {
+  .frame {
+    width: min(100% - 28px, 720px);
+    padding-top: 16px;
+  }
+
+  .topbar {
+    padding-bottom: 18px;
+  }
+
+  .topMeta {
+    display: none;
+  }
+
+  .hero {
+    grid-template-columns: 1fr;
+    gap: 18px;
+    padding: 34px 0 24px;
+  }
+
+  .heroCopy {
+    max-width: 600px;
+  }
+
+  .layout {
+    grid-template-columns: 1fr;
+  }
+
+  .summary {
+    position: static;
+    order: -1;
+  }
+}
+
+@media (max-width: 620px) {
+  .frame {
+    width: 100%;
+    padding: 0 0 28px;
+  }
+
+  .topbar,
+  .hero,
+  .progress {
+    margin-left: 16px;
+    margin-right: 16px;
+  }
+
+  .topbar {
+    padding-top: 14px;
+  }
+
+  .hero h1 {
+    font-size: 42px;
+  }
+
+  .progressItem {
+    overflow: hidden;
+    padding: 9px 7px;
+    text-align: center;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .layout {
+    gap: 10px;
+  }
+
+  .panel,
+  .summary {
+    border-right: 0;
+    border-left: 0;
+    border-radius: 0;
+  }
+
+  .panel {
+    padding: 22px 16px 24px;
+  }
+
+  .summary {
+    padding: 18px 16px;
+  }
+
+  .spaceGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .spaceCard {
+    min-height: 84px;
+  }
+
+  .fieldGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .fieldFull {
+    grid-column: auto;
+  }
+
+  .availabilityBox {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .availabilityBox .button {
+    width: 100%;
+  }
+
+  .actions {
+    position: sticky;
+    bottom: 0;
+    z-index: 5;
+    margin: 24px -16px -24px;
+    padding: 12px 16px;
+    border-top: 1px solid #d9d7d1;
+    background: rgba(255, 255, 255, 0.96);
+  }
+
+  .actions .button:last-child {
+    flex: 1;
+  }
+}
