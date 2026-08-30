@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 
 import "./globals.css";
 import "./modules.css";
+import "./admin-extra.css";
 
 export const metadata: Metadata = {
   title: "Vassment One",
