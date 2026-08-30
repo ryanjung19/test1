@@ -1,0 +1,404 @@
+.screen {
+  min-height: 100vh;
+  background: #f5f4f0;
+  color: #111111;
+}
+
+.frame {
+  width: min(980px, calc(100% - 32px));
+  margin: 0 auto;
+  padding: 24px 0 64px;
+}
+
+.topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  padding-bottom: 20px;
+  border-bottom: 1px solid #d9d7d1;
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+}
+
+.mark {
+  display: grid;
+  width: 38px;
+  height: 38px;
+  place-items: center;
+  background: #111111;
+  color: white;
+  font-size: 11px;
+  font-weight: 800;
+}
+
+.brand div:last-child {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.brand strong {
+  font-size: 12px;
+  letter-spacing: 0.05em;
+}
+
+.brand span,
+.reference {
+  color: #77756f;
+  font-size: 10px;
+}
+
+.hero {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 30px;
+  padding: 44px 0 28px;
+}
+
+.eyebrow {
+  margin: 0 0 9px;
+  color: #77756f;
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.15em;
+}
+
+.hero h1 {
+  margin: 0;
+  font-size: clamp(32px, 5vw, 58px);
+  font-weight: 620;
+  letter-spacing: -0.055em;
+  line-height: 1;
+}
+
+.statusBadge {
+  flex-shrink: 0;
+  padding: 9px 12px;
+  border: 1px solid #111111;
+  border-radius: 999px;
+  background: #111111;
+  color: white;
+  font-size: 10px;
+  font-weight: 800;
+}
+
+.progress {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 1px;
+  overflow: hidden;
+  margin-bottom: 16px;
+  border: 1px solid #dedcd6;
+  border-radius: 10px;
+  background: #dedcd6;
+}
+
+.progress > div {
+  min-height: 72px;
+  padding: 13px;
+  background: #ffffff;
+}
+
+.progress span,
+.progress small {
+  display: block;
+}
+
+.progress span {
+  margin-bottom: 11px;
+  color: #93918b;
+  font-size: 8px;
+  font-weight: 800;
+}
+
+.progress strong {
+  font-size: 11px;
+}
+
+.progress small {
+  margin-top: 4px;
+  color: #8a8882;
+  font-size: 8px;
+}
+
+.progressDone {
+  background: #f3faf5 !important;
+}
+
+.progressActive {
+  background: #111111 !important;
+  color: white;
+}
+
+.progressActive span,
+.progressActive small {
+  color: #bdbbb5;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.35fr) minmax(280px, 0.65fr);
+  gap: 14px;
+}
+
+.stack {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.panel {
+  padding: 22px;
+  border: 1px solid #d9d7d1;
+  border-radius: 12px;
+  background: white;
+}
+
+.panel h2 {
+  margin: 0 0 18px;
+  font-size: 16px;
+  letter-spacing: -0.025em;
+}
+
+.infoRows {
+  margin: 0;
+}
+
+.infoRow {
+  display: grid;
+  grid-template-columns: 110px minmax(0, 1fr);
+  gap: 14px;
+  padding: 11px 0;
+  border-top: 1px solid #eceae5;
+}
+
+.infoRow:first-child {
+  border-top: 0;
+}
+
+.infoRow dt {
+  color: #8a8882;
+  font-size: 9px;
+}
+
+.infoRow dd {
+  margin: 0;
+  text-align: right;
+  font-size: 10px;
+  font-weight: 700;
+}
+
+.quoteLines {
+  display: flex;
+  flex-direction: column;
+}
+
+.quoteLine {
+  display: grid;
+  grid-template-columns: 90px minmax(0, 1fr) 110px;
+  gap: 10px;
+  padding: 11px 0;
+  border-top: 1px solid #eceae5;
+  font-size: 10px;
+}
+
+.quoteLine:first-child {
+  border-top: 0;
+}
+
+.quoteLine span,
+.quoteLine em {
+  color: #86847f;
+  font-style: normal;
+}
+
+.quoteLine strong {
+  min-width: 0;
+}
+
+.quoteLine b {
+  text-align: right;
+}
+
+.quoteTotals {
+  margin-top: 14px;
+  padding-top: 12px;
+  border-top: 1px solid #d9d7d1;
+}
+
+.quoteTotals > div {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 5px 0;
+  font-size: 10px;
+}
+
+.quoteTotals span {
+  color: #85837d;
+}
+
+.quoteTotal {
+  margin-top: 7px;
+  padding-top: 10px !important;
+  border-top: 1px solid #111111;
+  font-size: 14px !important;
+}
+
+.paymentItem {
+  padding: 12px 0;
+  border-top: 1px solid #eceae5;
+}
+
+.paymentItem:first-of-type {
+  border-top: 0;
+}
+
+.paymentItemTop {
+  display: flex;
+  justify-content: space-between;
+  gap: 14px;
+}
+
+.paymentItemTop div {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.paymentItemTop span {
+  color: #85837d;
+  font-size: 8px;
+  text-transform: uppercase;
+}
+
+.paymentItemTop strong {
+  font-size: 11px;
+}
+
+.paymentItemTop b {
+  font-size: 12px;
+}
+
+.paymentBar {
+  height: 5px;
+  margin-top: 9px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: #e8e7e2;
+}
+
+.paymentBar > span {
+  display: block;
+  height: 100%;
+  background: #111111;
+}
+
+.holdBox {
+  padding: 16px;
+  border: 1px solid #d9c58c;
+  border-radius: 9px;
+  background: #fffaf0;
+}
+
+.holdBox span,
+.holdBox strong {
+  display: block;
+}
+
+.holdBox span {
+  color: #80601d;
+  font-size: 9px;
+  font-weight: 800;
+}
+
+.holdBox strong {
+  margin-top: 6px;
+  font-size: 15px;
+}
+
+.note {
+  margin: 14px 0 0;
+  color: #817f79;
+  font-size: 9px;
+  line-height: 1.6;
+}
+
+.invalid {
+  display: grid;
+  min-height: 80vh;
+  place-items: center;
+  padding: 30px;
+  text-align: center;
+}
+
+.invalid h1 {
+  margin: 0 0 10px;
+  font-size: 28px;
+}
+
+.invalid p {
+  max-width: 500px;
+  margin: 0;
+  color: #77756f;
+  font-size: 11px;
+  line-height: 1.6;
+}
+
+@media (max-width: 760px) {
+  .hero {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .progress {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 520px) {
+  .frame {
+    width: 100%;
+    padding-bottom: 30px;
+  }
+
+  .topbar,
+  .hero,
+  .progress {
+    margin-left: 16px;
+    margin-right: 16px;
+  }
+
+  .topbar {
+    padding-top: 14px;
+  }
+
+  .reference {
+    display: none;
+  }
+
+  .panel {
+    border-right: 0;
+    border-left: 0;
+    border-radius: 0;
+  }
+
+  .quoteLine {
+    grid-template-columns: 1fr;
+    gap: 3px;
+  }
+
+  .quoteLine b {
+    text-align: left;
+  }
+}
