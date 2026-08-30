@@ -1,0 +1,176 @@
+.calendar-block-side {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 5px;
+}
+
+.calendar-remove {
+  padding: 2px 4px;
+  border: 0;
+  background: transparent;
+  color: #9a4a41;
+  cursor: pointer;
+  font-size: 7px;
+  font-weight: 800;
+}
+
+.payment-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.payment-card {
+  padding: 22px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: white;
+}
+
+.payment-card-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 24px;
+}
+
+.payment-card-header h2 {
+  margin: 8px 0 4px;
+  font-size: 18px;
+}
+
+.payment-card-header p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 10px;
+}
+
+.payment-totals {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(100px, 1fr));
+  gap: 1px;
+  overflow: hidden;
+  border: 1px solid #ecece8;
+  border-radius: 8px;
+  background: #ecece8;
+}
+
+.payment-totals > div {
+  display: flex;
+  min-width: 100px;
+  flex-direction: column;
+  gap: 6px;
+  padding: 11px;
+  background: #fafaf8;
+}
+
+.payment-totals span {
+  color: #8a8a84;
+  font-size: 8px;
+}
+
+.payment-totals strong {
+  font-size: 12px;
+}
+
+.payment-transaction-form {
+  display: grid;
+  grid-template-columns: 0.8fr 1fr 1fr 1.2fr 1.2fr 1.4fr auto;
+  gap: 8px;
+  align-items: end;
+  margin-top: 18px;
+  padding-top: 16px;
+  border-top: 1px solid #ecece8;
+}
+
+.payment-transaction-form label {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.payment-transaction-form label > span {
+  color: var(--muted);
+  font-size: 9px;
+  font-weight: 700;
+}
+
+.payment-transaction-form input,
+.payment-transaction-form select {
+  min-width: 0;
+  height: 38px;
+  padding: 0 8px;
+  border: 1px solid var(--line);
+  border-radius: 7px;
+  background: white;
+  font: inherit;
+  font-size: 10px;
+}
+
+.transaction-history {
+  margin-top: 14px;
+  border-top: 1px solid #ecece8;
+}
+
+.transaction-history > div {
+  display: grid;
+  grid-template-columns: 150px 120px minmax(0, 1fr);
+  gap: 12px;
+  padding: 9px 0;
+  border-bottom: 1px solid #f0f0ed;
+  font-size: 9px;
+}
+
+.transaction-history span,
+.transaction-history em {
+  color: #7d7d77;
+  font-style: normal;
+}
+
+.transaction-history strong {
+  text-align: right;
+}
+
+.payment-status-paid {
+  color: #216546;
+}
+
+.payment-status-partially_paid,
+.payment-status-overdue {
+  color: #8a5d18;
+}
+
+@media (max-width: 1100px) {
+  .payment-card-header {
+    flex-direction: column;
+  }
+
+  .payment-totals {
+    width: 100%;
+  }
+
+  .payment-transaction-form {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 700px) {
+  .payment-totals {
+    grid-template-columns: 1fr;
+  }
+
+  .payment-transaction-form {
+    grid-template-columns: 1fr;
+  }
+
+  .transaction-history > div {
+    grid-template-columns: 1fr;
+    gap: 3px;
+  }
+
+  .transaction-history strong {
+    text-align: left;
+  }
+}
