@@ -1,4 +1,4 @@
-# Agent instructions — Basement One Booking OS
+# Agent instructions — Vassment One Booking OS
 
 Read `README.md` and `docs/ARCHITECTURE.md` before changing code.
 
@@ -9,8 +9,8 @@ Read `README.md` and `docs/ARCHITECTURE.md` before changing code.
 3. Multi-space lock acquisition must use deterministic sorted order.
 4. Do not store raw card PAN, CVC, expiration date or other card credentials.
 5. Money is integer KRW unless a future explicit multi-currency migration is approved.
-6. Store timestamps as timezone-aware timestamps. Basement One business time is `Asia/Seoul`.
-7. Keep `organization_id` tenant boundaries intact. The current venue is Basement One but the core must remain multi-venue capable.
+6. Store timestamps as timezone-aware timestamps. Vassment One business time is `Asia/Seoul`.
+7. Keep `organization_id` tenant boundaries intact. The current venue is Vassment One but the core must remain multi-venue capable.
 8. Do not overwrite historical quotes or successful payment transactions. Use new versions / compensating refund transactions.
 9. External integrations must go through explicit adapters/API boundaries. Do not couple chatbot, Kakao, email or a PG SDK directly into domain tables.
 10. Do not mark placeholder UI as implemented functionality. README status must match reality.
