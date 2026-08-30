@@ -3,7 +3,7 @@ name: CI
 on:
   push:
     branches:
-      - "feat/basement-one-booking-v0.1"
+      - "feat/vassment-one-booking-v0.1"
   pull_request:
     branches:
       - main
