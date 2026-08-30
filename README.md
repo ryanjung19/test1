@@ -1,6 +1,6 @@
-# Basement One Booking OS
+# Vassment One Booking OS
 
-Venue prospecting, sales CRM, booking calendar and payment operations for BASEMENT ONE.
+Venue prospecting, sales CRM, booking calendar and payment operations for VASSMENT ONE.
 
 ## v0.1 status
 
@@ -8,7 +8,7 @@ Venue prospecting, sales CRM, booking calendar and payment operations for BASEME
 
 - Next.js application shell and module navigation
 - PostgreSQL / Drizzle domain schema
-- Basement One tenant, venue and B1 / 1F bootstrap SQL
+- Vassment One tenant, venue and B1 / 1F bootstrap SQL
 - prospect discovery data model
 - customer / contact / sales lead / interaction CRM model
 - booking + multi-space mapping
@@ -80,7 +80,7 @@ Then:
 npm run dev
 ```
 
-## Initial Basement One IDs
+## Initial Vassment One IDs
 
 The bootstrap file uses stable initial IDs so external integrations can be wired before an admin settings UI exists.
 
