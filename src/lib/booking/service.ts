@@ -8,6 +8,8 @@ import {
   bookingSpaces,
   bookingStatusEnum,
   scheduleBlocks,
+  spaces,
+  venues,
 } from "@/db/schema";
 
 type BookingStatus = (typeof bookingStatusEnum.enumValues)[number];
@@ -49,6 +51,13 @@ export class BookingConflictError extends Error {
   constructor(public readonly conflicts: ScheduleConflict[]) {
     super("The requested time overlaps an existing blocking schedule block.");
     this.name = "BookingConflictError";
+  }
+}
+
+export class BookingValidationError extends Error {
+  constructor(public readonly code: "venue_not_found" | "invalid_space") {
+    super(code);
+    this.name = "BookingValidationError";
   }
 }
 
@@ -125,11 +134,42 @@ export async function createBooking(input: CreateBookingInput) {
   return db.transaction(async (tx) => {
     // Serialize booking writes per space. Sorting prevents lock-order deadlocks when
     // one reservation spans B1 + 1F. This closes the race between conflict check
-    // and insert without requiring a paid calendar component or external lock store.
+    // and insert without requiring an external lock store.
     for (const spaceId of uniqueSpaceIds) {
       await tx.execute(
         sql`select pg_advisory_xact_lock(hashtext(${spaceId})::bigint)`,
       );
+    }
+
+    const [venue] = await tx
+      .select({ id: venues.id })
+      .from(venues)
+      .where(
+        and(
+          eq(venues.id, input.venueId),
+          eq(venues.organizationId, input.organizationId),
+          eq(venues.active, true),
+        ),
+      )
+      .limit(1);
+
+    if (!venue) {
+      throw new BookingValidationError("venue_not_found");
+    }
+
+    const validSpaces = await tx
+      .select({ id: spaces.id })
+      .from(spaces)
+      .where(
+        and(
+          eq(spaces.venueId, input.venueId),
+          eq(spaces.active, true),
+          inArray(spaces.id, uniqueSpaceIds),
+        ),
+      );
+
+    if (validSpaces.length !== uniqueSpaceIds.length) {
+      throw new BookingValidationError("invalid_space");
     }
 
     const conflicts = await tx
