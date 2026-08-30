@@ -6,8 +6,8 @@ import { db } from "@/db";
 import {
   bookings,
   bookingSpaces,
+  bookingStatusEnum,
   scheduleBlocks,
-  type bookingStatusEnum,
 } from "@/db/schema";
 
 type BookingStatus = (typeof bookingStatusEnum.enumValues)[number];
