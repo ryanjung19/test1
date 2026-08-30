@@ -11,6 +11,7 @@ const navigation = [
   ["Calendar", "/calendar"],
   ["Bookings", "/bookings"],
   ["Quotes", "/quotes"],
+  ["Contracts", "/contracts"],
   ["Payments", "/payments"],
 ] as const;
 
