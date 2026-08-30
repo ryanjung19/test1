@@ -5,6 +5,7 @@ import { redirect } from "next/navigation";
 import { z } from "zod";
 
 import { hasAdminSession } from "@/lib/auth/admin-session";
+import { activateInquiryAsHold } from "@/lib/booking/inquiry-activation";
 import {
   BookingConflictError,
   BookingValidationError,
@@ -45,6 +46,13 @@ const lifecycleSchema = z.object({
   holdExpiresAt: z.string().trim().max(40).optional(),
 });
 
+const inquiryHoldSchema = z.object({
+  bookingId: z.string().uuid(),
+  holdExpiresAt: z.string().trim().min(1).max(40),
+  setupMinutes: z.coerce.number().int().min(0).max(24 * 60),
+  teardownMinutes: z.coerce.number().int().min(0).max(24 * 60),
+});
+
 function datePlusDays(date: string, days: number) {
   const [year, month, day] = date.split("-").map(Number);
   return new Date(Date.UTC(year, month - 1, day + days)).toISOString().slice(0, 10);
@@ -76,6 +84,12 @@ async function requireAdmin() {
   if (!(await hasAdminSession())) {
     redirect("/login");
   }
+}
+
+function finish(destination: string) {
+  revalidatePath("/bookings");
+  revalidatePath("/calendar");
+  redirect(destination);
 }
 
 export async function createAdminBookingAction(formData: FormData) {
@@ -116,9 +130,31 @@ export async function createAdminBookingAction(formData: FormData) {
     destination = `/bookings?error=${encodeURIComponent(errorCode(error))}`;
   }
 
-  revalidatePath("/bookings");
-  revalidatePath("/calendar");
-  redirect(destination);
+  finish(destination);
+}
+
+export async function activateInquiryHoldAction(formData: FormData) {
+  await requireAdmin();
+  let destination = "/bookings?updated=1";
+
+  try {
+    const payload = inquiryHoldSchema.parse(Object.fromEntries(formData));
+    const holdExpiresAt = seoulLocalInput(payload.holdExpiresAt);
+    if (!holdExpiresAt) {
+      throw new BookingValidationError("hold_expiration_required");
+    }
+
+    await activateInquiryAsHold({
+      bookingId: payload.bookingId,
+      holdExpiresAt,
+      setupMinutes: payload.setupMinutes,
+      teardownMinutes: payload.teardownMinutes,
+    });
+  } catch (error) {
+    destination = `/bookings?error=${encodeURIComponent(errorCode(error))}`;
+  }
+
+  finish(destination);
 }
 
 export async function bookingLifecycleAction(formData: FormData) {
@@ -140,7 +176,5 @@ export async function bookingLifecycleAction(formData: FormData) {
     destination = `/bookings?error=${encodeURIComponent(errorCode(error))}`;
   }
 
-  revalidatePath("/bookings");
-  revalidatePath("/calendar");
-  redirect(destination);
+  finish(destination);
 }
