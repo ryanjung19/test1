@@ -1,14 +1,9 @@
 import { eq } from "drizzle-orm";
 
 import { db, isDatabaseConfigured } from "@/db";
-import {
-  bookings,
-  bookingSpaces,
-  paymentRequests,
-  paymentTransactions,
-  spaces,
-} from "@/db/schema";
+import { bookings, bookingSpaces, paymentRequests, paymentTransactions, spaces } from "@/db/schema";
 import { verifyCustomerPortalToken } from "@/lib/auth/customer-portal";
+import { getCurrentContract } from "@/lib/contracts/service";
 import { getLatestCustomerQuote } from "@/lib/quotes/service";
 
 import { acceptQuoteAction } from "./actions";
@@ -71,42 +66,28 @@ export default async function ReservationPortalPage({ params, searchParams }: Pa
     return (
       <main className={styles.screen}>
         <section className={styles.invalid}>
-          <div>
-            <h1>예약 링크를 확인할 수 없습니다.</h1>
-            <p>링크가 만료되었거나 올바르지 않습니다. Vassment One 담당자에게 새 예약 확인 링크를 요청해 주세요.</p>
-          </div>
+          <div><h1>예약 링크를 확인할 수 없습니다.</h1><p>링크가 만료되었거나 올바르지 않습니다. Vassment One 담당자에게 새 예약 확인 링크를 요청해 주세요.</p></div>
         </section>
       </main>
     );
   }
 
   const [booking] = await db.select().from(bookings).where(eq(bookings.id, id)).limit(1);
-  if (!booking) {
-    return (
-      <main className={styles.screen}>
-        <section className={styles.invalid}><div><h1>예약 정보를 찾을 수 없습니다.</h1></div></section>
-      </main>
-    );
-  }
+  if (!booking) return <main className={styles.screen}><section className={styles.invalid}><div><h1>예약 정보를 찾을 수 없습니다.</h1></div></section></main>;
 
-  const spaceRows = await db
-    .select({ code: spaces.code })
-    .from(bookingSpaces)
-    .innerJoin(spaces, eq(bookingSpaces.spaceId, spaces.id))
-    .where(eq(bookingSpaces.bookingId, booking.id));
-
-  const quoteData = await getLatestCustomerQuote(booking.id);
-  const requestRows = await db.select().from(paymentRequests).where(eq(paymentRequests.bookingId, booking.id));
-  const transactionRows = await db.select().from(paymentTransactions).where(eq(paymentTransactions.bookingId, booking.id));
+  const [spaceRows, quoteData, contract, requestRows, transactionRows] = await Promise.all([
+    db.select({ code: spaces.code }).from(bookingSpaces).innerJoin(spaces, eq(bookingSpaces.spaceId, spaces.id)).where(eq(bookingSpaces.bookingId, booking.id)),
+    getLatestCustomerQuote(booking.id),
+    getCurrentContract(booking.id),
+    db.select().from(paymentRequests).where(eq(paymentRequests.bookingId, booking.id)),
+    db.select().from(paymentTransactions).where(eq(paymentTransactions.bookingId, booking.id)),
+  ]);
 
   const paidByRequest = new Map<string, number>();
   for (const transaction of transactionRows) {
     if (!transaction.paymentRequestId || transaction.status !== "succeeded") continue;
     const current = paidByRequest.get(transaction.paymentRequestId) ?? 0;
-    paidByRequest.set(
-      transaction.paymentRequestId,
-      current + (transaction.type === "charge" ? transaction.amount : -transaction.amount),
-    );
+    paidByRequest.set(transaction.paymentRequestId, current + (transaction.type === "charge" ? transaction.amount : -transaction.amount));
   }
 
   const spacesText = spaceRows.map((row) => row.code).sort().join(" + ") || "-";
@@ -117,15 +98,13 @@ export default async function ReservationPortalPage({ params, searchParams }: Pa
     [3, "예약", stage >= 3 ? "확정" : "대기"],
     [4, "행사", stage >= 4 ? "완료" : "예정"],
   ] as const;
+  const customerContractVisible = contract && (contract.status === "sent" || contract.status === "signed");
 
   return (
     <main className={styles.screen}>
       <div className={styles.frame}>
         <header className={styles.topbar}>
-          <div className={styles.brand}>
-            <div className={styles.mark}>V1</div>
-            <div><strong>VASSMENT ONE</strong><span>Reservation Detail</span></div>
-          </div>
+          <div className={styles.brand}><div className={styles.mark}>V1</div><div><strong>VASSMENT ONE</strong><span>Reservation Detail</span></div></div>
           <span className={styles.reference}>{booking.bookingNumber}</span>
         </header>
 
@@ -187,17 +166,24 @@ export default async function ReservationPortalPage({ params, searchParams }: Pa
                 ) : null}
                 {quoteData.quote.status === "accepted" ? <div className={styles.acceptedBox}>✓ 견적 승인 완료</div> : null}
               </section>
-            ) : (
-              <section className={styles.panel}><h2>견적</h2><p className={styles.note}>담당자가 견적을 준비 중입니다. 고객에게 발송된 견적이 생기면 이 화면에 표시됩니다.</p></section>
-            )}
+            ) : <section className={styles.panel}><h2>견적</h2><p className={styles.note}>담당자가 견적을 준비 중입니다. 고객에게 발송된 견적이 생기면 이 화면에 표시됩니다.</p></section>}
+
+            {customerContractVisible ? (
+              <section className={styles.panel}>
+                <h2>계약</h2>
+                <dl className={styles.infoRows}>
+                  <div className={styles.infoRow}><dt>상태</dt><dd>{contract.status}</dd></div>
+                  <div className={styles.infoRow}><dt>전송</dt><dd>{dateTime(contract.sentAt)}</dd></div>
+                  <div className={styles.infoRow}><dt>서명</dt><dd>{dateTime(contract.signedAt)}</dd></div>
+                </dl>
+                {contract.documentUrl ? <a className="button secondary button-link" href={contract.documentUrl} target="_blank" rel="noreferrer">계약서 확인</a> : null}
+              </section>
+            ) : null}
           </div>
 
           <aside className={styles.stack}>
             {booking.holdExpiresAt && (booking.status === "hold" || booking.status === "tentative") ? (
-              <div className={styles.holdBox}>
-                <span>HOLD VALID UNTIL</span><strong>{dateTime(booking.holdExpiresAt)}</strong>
-                <p className={styles.note}>해당 시각까지 임시로 일정을 확보한 상태입니다. 연장 또는 최종 확정은 담당자와 협의해 주세요.</p>
-              </div>
+              <div className={styles.holdBox}><span>HOLD VALID UNTIL</span><strong>{dateTime(booking.holdExpiresAt)}</strong><p className={styles.note}>해당 시각까지 임시로 일정을 확보한 상태입니다. 연장 또는 최종 확정은 담당자와 협의해 주세요.</p></div>
             ) : null}
 
             <section className={styles.panel}>
@@ -208,10 +194,7 @@ export default async function ReservationPortalPage({ params, searchParams }: Pa
                 const percent = request.amount > 0 ? Math.min((paid / request.amount) * 100, 100) : 0;
                 return (
                   <div className={styles.paymentItem} key={request.id}>
-                    <div className={styles.paymentItemTop}>
-                      <div><span>{request.kind}</span><strong>{request.status} · {dateTime(request.dueAt)}</strong></div>
-                      <b>{krw(paid)} / {krw(request.amount)}</b>
-                    </div>
+                    <div className={styles.paymentItemTop}><div><span>{request.kind}</span><strong>{request.status} · {dateTime(request.dueAt)}</strong></div><b>{krw(paid)} / {krw(request.amount)}</b></div>
                     <div className={styles.paymentBar}><span style={{ width: `${percent}%` }} /></div>
                   </div>
                 );
