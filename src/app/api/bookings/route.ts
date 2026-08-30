@@ -3,6 +3,7 @@ import { z } from "zod";
 
 import {
   BookingConflictError,
+  BookingValidationError,
   createBooking,
 } from "@/lib/booking/service";
 import { verifyIntegrationSecret } from "@/lib/integrations/shared-secret";
@@ -71,6 +72,10 @@ export async function POST(request: Request) {
         { error: "invalid_request", issues: error.issues },
         { status: 400 },
       );
+    }
+
+    if (error instanceof BookingValidationError) {
+      return NextResponse.json({ error: error.code }, { status: 400 });
     }
 
     if (error instanceof BookingConflictError) {
