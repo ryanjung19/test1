@@ -1,4 +1,4 @@
-import { and, desc, eq, sql } from "drizzle-orm";
+import { and, desc, eq, ne, sql } from "drizzle-orm";
 
 import { db } from "@/db";
 import { bookings, quoteItems, quotes } from "@/db/schema";
@@ -17,7 +17,8 @@ export class QuoteValidationError extends Error {
       | "invalid_quote_item"
       | "invalid_discount"
       | "quote_not_found"
-      | "invalid_quote_status",
+      | "invalid_quote_status"
+      | "quote_expired",
   ) {
     super(code);
     this.name = "QuoteValidationError";
@@ -133,24 +134,104 @@ export async function updateQuoteStatus(params: {
   quoteId: string;
   status: "sent" | "accepted" | "rejected" | "expired" | "cancelled";
 }) {
-  const [quote] = await db
-    .select()
-    .from(quotes)
-    .where(eq(quotes.id, params.quoteId))
-    .limit(1);
-  if (!quote) throw new QuoteValidationError("quote_not_found");
+  return db.transaction(async (tx) => {
+    const [initial] = await tx
+      .select()
+      .from(quotes)
+      .where(eq(quotes.id, params.quoteId))
+      .limit(1);
+    if (!initial) throw new QuoteValidationError("quote_not_found");
 
-  if (quote.status === "accepted" && params.status !== "cancelled") {
-    throw new QuoteValidationError("invalid_quote_status");
-  }
+    await tx.execute(
+      sql`select pg_advisory_xact_lock(hashtext(${`quote:${initial.bookingId}`})::bigint)`,
+    );
 
-  const [updated] = await db
-    .update(quotes)
-    .set({ status: params.status, updatedAt: new Date() })
-    .where(eq(quotes.id, params.quoteId))
-    .returning();
+    const [quote] = await tx
+      .select()
+      .from(quotes)
+      .where(eq(quotes.id, params.quoteId))
+      .limit(1);
+    if (!quote) throw new QuoteValidationError("quote_not_found");
 
-  return updated;
+    if (quote.status === "accepted" && params.status !== "cancelled") {
+      throw new QuoteValidationError("invalid_quote_status");
+    }
+
+    if (params.status === "sent") {
+      await tx
+        .update(quotes)
+        .set({ status: "expired", updatedAt: new Date() })
+        .where(
+          and(
+            eq(quotes.bookingId, quote.bookingId),
+            eq(quotes.status, "sent"),
+            ne(quotes.id, quote.id),
+          ),
+        );
+    }
+
+    const [updated] = await tx
+      .update(quotes)
+      .set({ status: params.status, updatedAt: new Date() })
+      .where(eq(quotes.id, params.quoteId))
+      .returning();
+
+    return updated;
+  });
+}
+
+export async function acceptCustomerQuote(params: {
+  bookingId: string;
+  quoteId: string;
+}) {
+  return db.transaction(async (tx) => {
+    await tx.execute(
+      sql`select pg_advisory_xact_lock(hashtext(${`quote:${params.bookingId}`})::bigint)`,
+    );
+
+    const [quote] = await tx
+      .select()
+      .from(quotes)
+      .where(
+        and(
+          eq(quotes.id, params.quoteId),
+          eq(quotes.bookingId, params.bookingId),
+        ),
+      )
+      .limit(1);
+
+    if (!quote) throw new QuoteValidationError("quote_not_found");
+    if (quote.status === "accepted") return quote;
+    if (quote.status !== "sent") {
+      throw new QuoteValidationError("invalid_quote_status");
+    }
+    if (quote.validUntil && quote.validUntil < new Date()) {
+      await tx
+        .update(quotes)
+        .set({ status: "expired", updatedAt: new Date() })
+        .where(eq(quotes.id, quote.id));
+      throw new QuoteValidationError("quote_expired");
+    }
+
+    const [updated] = await tx
+      .update(quotes)
+      .set({ status: "accepted", updatedAt: new Date() })
+      .where(eq(quotes.id, quote.id))
+      .returning();
+
+    await tx
+      .update(quotes)
+      .set({ status: "expired", updatedAt: new Date() })
+      .where(
+        and(
+          eq(quotes.bookingId, params.bookingId),
+          eq(quotes.status, "sent"),
+          ne(quotes.id, quote.id),
+        ),
+      );
+
+    return updated;
+  });
 }
 
 export async function getLatestCustomerQuote(bookingId: string) {
