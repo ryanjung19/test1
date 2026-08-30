@@ -4,17 +4,12 @@ import { Pool } from "pg";
 import * as schema from "./schema";
 
 const connectionString = process.env.DATABASE_URL;
-
-if (!connectionString) {
-  throw new Error("DATABASE_URL is required");
-}
-
 const globalForDb = globalThis as unknown as { pool?: Pool };
 
 export const pool =
   globalForDb.pool ??
   new Pool({
-    connectionString,
+    ...(connectionString ? { connectionString } : {}),
     max: 10,
   });
 
@@ -23,3 +18,7 @@ if (process.env.NODE_ENV !== "production") {
 }
 
 export const db = drizzle(pool, { schema });
+
+export function isDatabaseConfigured() {
+  return Boolean(connectionString);
+}
