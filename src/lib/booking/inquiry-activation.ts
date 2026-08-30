@@ -65,11 +65,13 @@ export async function activateInquiryAsHold(params: {
       throw new BookingValidationError("invalid_transition");
     }
 
+    const eventStartsAt = booking.eventStartsAt;
+    const eventEndsAt = booking.eventEndsAt;
     const blockedStartsAt = new Date(
-      booking.eventStartsAt.getTime() - setupMinutes * 60_000,
+      eventStartsAt.getTime() - setupMinutes * 60_000,
     );
     const blockedEndsAt = new Date(
-      booking.eventEndsAt.getTime() + teardownMinutes * 60_000,
+      eventEndsAt.getTime() + teardownMinutes * 60_000,
     );
 
     const conflicts = await tx
@@ -108,7 +110,7 @@ export async function activateInquiryAsHold(params: {
           type: "setup",
           title: `${booking.title} / 준비`,
           startsAt: blockedStartsAt,
-          endsAt: booking.eventStartsAt!,
+          endsAt: eventStartsAt,
         });
       }
 
@@ -118,8 +120,8 @@ export async function activateInquiryAsHold(params: {
         bookingId: booking.id,
         type: "hold",
         title: booking.title,
-        startsAt: booking.eventStartsAt,
-        endsAt: booking.eventEndsAt,
+        startsAt: eventStartsAt,
+        endsAt: eventEndsAt,
         metadata: { holdExpiresAt: params.holdExpiresAt.toISOString() },
       });
 
@@ -130,7 +132,7 @@ export async function activateInquiryAsHold(params: {
           bookingId: booking.id,
           type: "teardown",
           title: `${booking.title} / 철수`,
-          startsAt: booking.eventEndsAt!,
+          startsAt: eventEndsAt,
           endsAt: blockedEndsAt,
         });
       }
