@@ -7,6 +7,7 @@ import "./crm-extra.css";
 import "./prospects-extra.css";
 import "./quote-extra.css";
 import "./quote-index-extra.css";
+import "./contract-extra.css";
 
 export const metadata: Metadata = {
   title: "Vassment One",
