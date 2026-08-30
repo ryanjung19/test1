@@ -11,6 +11,7 @@ import {
 import { verifyCustomerPortalToken } from "@/lib/auth/customer-portal";
 import { getLatestCustomerQuote } from "@/lib/quotes/service";
 
+import { acceptQuoteAction } from "./actions";
 import styles from "./portal.module.css";
 
 export const dynamic = "force-dynamic";
@@ -39,19 +40,13 @@ function krw(value: number) {
 
 function customerStatus(status: string) {
   switch (status) {
-    case "inquiry":
-      return "문의 접수";
+    case "inquiry": return "문의 접수";
     case "hold":
-    case "tentative":
-      return "일정 임시 확보";
-    case "confirmed":
-      return "예약 확정";
-    case "completed":
-      return "행사 완료";
-    case "cancelled":
-      return "예약 종료";
-    default:
-      return "진행 중";
+    case "tentative": return "일정 임시 확보";
+    case "confirmed": return "예약 확정";
+    case "completed": return "행사 완료";
+    case "cancelled": return "예약 종료";
+    default: return "진행 중";
   }
 }
 
@@ -64,12 +59,13 @@ function progressIndex(status: string) {
 
 type PageProps = {
   params: Promise<{ id: string }>;
-  searchParams: Promise<{ token?: string }>;
+  searchParams: Promise<{ token?: string; accepted?: string; error?: string }>;
 };
 
 export default async function ReservationPortalPage({ params, searchParams }: PageProps) {
   const { id } = await params;
-  const { token } = await searchParams;
+  const query = await searchParams;
+  const token = query.token;
 
   if (!verifyCustomerPortalToken(id, token) || !isDatabaseConfigured()) {
     return (
@@ -84,18 +80,11 @@ export default async function ReservationPortalPage({ params, searchParams }: Pa
     );
   }
 
-  const [booking] = await db
-    .select()
-    .from(bookings)
-    .where(eq(bookings.id, id))
-    .limit(1);
-
+  const [booking] = await db.select().from(bookings).where(eq(bookings.id, id)).limit(1);
   if (!booking) {
     return (
       <main className={styles.screen}>
-        <section className={styles.invalid}>
-          <div><h1>예약 정보를 찾을 수 없습니다.</h1></div>
-        </section>
+        <section className={styles.invalid}><div><h1>예약 정보를 찾을 수 없습니다.</h1></div></section>
       </main>
     );
   }
@@ -107,14 +96,8 @@ export default async function ReservationPortalPage({ params, searchParams }: Pa
     .where(eq(bookingSpaces.bookingId, booking.id));
 
   const quoteData = await getLatestCustomerQuote(booking.id);
-  const requestRows = await db
-    .select()
-    .from(paymentRequests)
-    .where(eq(paymentRequests.bookingId, booking.id));
-  const transactionRows = await db
-    .select()
-    .from(paymentTransactions)
-    .where(eq(paymentTransactions.bookingId, booking.id));
+  const requestRows = await db.select().from(paymentRequests).where(eq(paymentRequests.bookingId, booking.id));
+  const transactionRows = await db.select().from(paymentTransactions).where(eq(paymentTransactions.bookingId, booking.id));
 
   const paidByRequest = new Map<string, number>();
   for (const transaction of transactionRows) {
@@ -141,31 +124,23 @@ export default async function ReservationPortalPage({ params, searchParams }: Pa
         <header className={styles.topbar}>
           <div className={styles.brand}>
             <div className={styles.mark}>V1</div>
-            <div>
-              <strong>VASSMENT ONE</strong>
-              <span>Reservation Detail</span>
-            </div>
+            <div><strong>VASSMENT ONE</strong><span>Reservation Detail</span></div>
           </div>
           <span className={styles.reference}>{booking.bookingNumber}</span>
         </header>
 
         <section className={styles.hero}>
-          <div>
-            <p className={styles.eyebrow}>YOUR RESERVATION</p>
-            <h1>{booking.customerName ?? booking.title}</h1>
-          </div>
+          <div><p className={styles.eyebrow}>YOUR RESERVATION</p><h1>{booking.customerName ?? booking.title}</h1></div>
           <span className={styles.statusBadge}>{customerStatus(booking.status)}</span>
         </section>
 
+        {query.accepted ? <div className="admin-alert admin-alert-success">견적을 승인했습니다. 담당자가 이후 계약/예약 확정 절차를 안내합니다.</div> : null}
+        {query.error ? <div className="admin-alert admin-alert-error">견적 승인 요청을 처리하지 못했습니다. 견적 유효기간 또는 링크 상태를 확인해 주세요.</div> : null}
+
         <section className={styles.progress} aria-label="예약 진행상태">
           {progress.map(([number, label, detail]) => (
-            <div
-              key={number}
-              className={number < stage ? styles.progressDone : number === stage ? styles.progressActive : ""}
-            >
-              <span>0{number}</span>
-              <strong>{label}</strong>
-              <small>{detail}</small>
+            <div key={number} className={number < stage ? styles.progressDone : number === stage ? styles.progressActive : ""}>
+              <span>0{number}</span><strong>{label}</strong><small>{detail}</small>
             </div>
           ))}
         </section>
@@ -201,20 +176,26 @@ export default async function ReservationPortalPage({ params, searchParams }: Pa
                   <div className={styles.quoteTotal}><span>총 견적</span><strong>{krw(quoteData.quote.totalAmount)}</strong></div>
                 </div>
                 <p className={styles.note}>견적 상태: {quoteData.quote.status} · 유효기간 {dateTime(quoteData.quote.validUntil)}</p>
+                {quoteData.quote.status === "sent" ? (
+                  <form className={styles.quoteAccept} action={acceptQuoteAction}>
+                    <input type="hidden" name="bookingId" value={booking.id} />
+                    <input type="hidden" name="quoteId" value={quoteData.quote.id} />
+                    <input type="hidden" name="token" value={token ?? ""} />
+                    <button className="button primary" type="submit">이 견적 승인</button>
+                    <small>승인하면 견적 내용에 동의한 기록이 Booking OS에 남습니다.</small>
+                  </form>
+                ) : null}
+                {quoteData.quote.status === "accepted" ? <div className={styles.acceptedBox}>✓ 견적 승인 완료</div> : null}
               </section>
             ) : (
-              <section className={styles.panel}>
-                <h2>견적</h2>
-                <p className={styles.note}>담당자가 견적을 준비 중입니다. 고객에게 발송된 견적이 생기면 이 화면에 표시됩니다.</p>
-              </section>
+              <section className={styles.panel}><h2>견적</h2><p className={styles.note}>담당자가 견적을 준비 중입니다. 고객에게 발송된 견적이 생기면 이 화면에 표시됩니다.</p></section>
             )}
           </div>
 
           <aside className={styles.stack}>
             {booking.holdExpiresAt && (booking.status === "hold" || booking.status === "tentative") ? (
               <div className={styles.holdBox}>
-                <span>HOLD VALID UNTIL</span>
-                <strong>{dateTime(booking.holdExpiresAt)}</strong>
+                <span>HOLD VALID UNTIL</span><strong>{dateTime(booking.holdExpiresAt)}</strong>
                 <p className={styles.note}>해당 시각까지 임시로 일정을 확보한 상태입니다. 연장 또는 최종 확정은 담당자와 협의해 주세요.</p>
               </div>
             ) : null}
@@ -228,10 +209,7 @@ export default async function ReservationPortalPage({ params, searchParams }: Pa
                 return (
                   <div className={styles.paymentItem} key={request.id}>
                     <div className={styles.paymentItemTop}>
-                      <div>
-                        <span>{request.kind}</span>
-                        <strong>{request.status} · {dateTime(request.dueAt)}</strong>
-                      </div>
+                      <div><span>{request.kind}</span><strong>{request.status} · {dateTime(request.dueAt)}</strong></div>
                       <b>{krw(paid)} / {krw(request.amount)}</b>
                     </div>
                     <div className={styles.paymentBar}><span style={{ width: `${percent}%` }} /></div>
@@ -240,10 +218,7 @@ export default async function ReservationPortalPage({ params, searchParams }: Pa
               })}
             </section>
 
-            <section className={styles.panel}>
-              <h2>문의</h2>
-              <p className={styles.note}>일정 변경, 견적, 계약, 결제 관련 문의는 기존 Vassment One 담당 채널을 이용해 주세요.</p>
-            </section>
+            <section className={styles.panel}><h2>문의</h2><p className={styles.note}>일정 변경, 견적, 계약, 결제 관련 문의는 기존 Vassment One 담당 채널을 이용해 주세요.</p></section>
           </aside>
         </div>
       </div>
