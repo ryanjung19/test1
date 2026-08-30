@@ -1,0 +1,167 @@
+.crm-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.crm-card {
+  padding: 22px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: white;
+}
+
+.crm-card-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 24px;
+}
+
+.crm-card-header h2 {
+  margin: 8px 0 4px;
+  font-size: 18px;
+}
+
+.crm-card-header p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 10px;
+}
+
+.crm-contact {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  text-align: right;
+}
+
+.crm-contact strong {
+  font-size: 11px;
+}
+
+.crm-contact span {
+  color: var(--muted);
+  font-size: 9px;
+}
+
+.crm-control-grid {
+  display: grid;
+  grid-template-columns: minmax(300px, 0.75fr) minmax(0, 1.5fr);
+  gap: 10px;
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px solid #ecece8;
+}
+
+.crm-form {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+  align-items: end;
+  padding: 12px;
+  border: 1px solid #ecece8;
+  border-radius: 8px;
+  background: #fafaf8;
+}
+
+.crm-interaction-form {
+  grid-template-columns: 0.8fr 0.8fr 1fr 1.4fr 1fr auto;
+}
+
+.crm-form label {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.crm-form label > span {
+  color: var(--muted);
+  font-size: 9px;
+  font-weight: 700;
+}
+
+.crm-form input,
+.crm-form select {
+  min-width: 0;
+  height: 38px;
+  padding: 0 8px;
+  border: 1px solid var(--line);
+  border-radius: 7px;
+  background: white;
+  font: inherit;
+  font-size: 10px;
+}
+
+.crm-field-wide {
+  min-width: 160px !important;
+}
+
+.crm-history {
+  margin-top: 14px;
+  padding-top: 10px;
+  border-top: 1px solid #ecece8;
+}
+
+.crm-history > div {
+  display: grid;
+  grid-template-columns: 130px 140px minmax(0, 1fr);
+  gap: 12px;
+  padding: 8px 0;
+  border-bottom: 1px solid #f0f0ed;
+  font-size: 9px;
+}
+
+.crm-history span {
+  color: #8b8b85;
+}
+
+.crm-history strong {
+  font-size: 9px;
+}
+
+.crm-history p {
+  margin: 0;
+  color: #5f5f5a;
+  line-height: 1.45;
+}
+
+.crm-status-won,
+.crm-status-opportunity {
+  color: #216546;
+}
+
+.crm-status-lost {
+  color: #8e3c34;
+}
+
+@media (max-width: 1100px) {
+  .crm-control-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .crm-interaction-form {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 700px) {
+  .crm-card-header {
+    flex-direction: column;
+  }
+
+  .crm-contact {
+    text-align: left;
+  }
+
+  .crm-form,
+  .crm-interaction-form {
+    grid-template-columns: 1fr;
+  }
+
+  .crm-history > div {
+    grid-template-columns: 1fr;
+    gap: 3px;
+  }
+}
