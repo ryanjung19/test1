@@ -1,16 +1,16 @@
--- BASEMENT ONE initial tenant / venue / spaces.
+-- VASSMENT ONE initial tenant / venue / spaces.
 -- Run after the generated Drizzle migrations have been applied.
 
 insert into organizations (id, name, slug)
-values ('00000000-0000-0000-0000-000000000001', 'BASEMENT ONE', 'basement-one')
+values ('00000000-0000-0000-0000-000000000001', 'VASSMENT ONE', 'vassment-one')
 on conflict (slug) do nothing;
 
 insert into venues (id, organization_id, name, slug, timezone, active)
 values (
   '00000000-0000-0000-0000-000000000010',
   '00000000-0000-0000-0000-000000000001',
-  'BASEMENT ONE',
-  'basement-one-seoul',
+  'VASSMENT ONE',
+  'vassment-one-seoul',
   'Asia/Seoul',
   true
 )
