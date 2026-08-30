@@ -1,8 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
-import type { ReactNode } from "react";
+import { usePathname, useRouter } from "next/navigation";
+import { useState, type ReactNode } from "react";
 
 const navigation = [
   ["Overview", "/"],
@@ -13,15 +13,20 @@ const navigation = [
   ["Payments", "/payments"],
 ] as const;
 
-function isPublicBookingPath(pathname: string) {
-  return pathname === "/reserve" || pathname.startsWith("/reservation/");
-}
-
-export function AppChrome({ children }: { children: ReactNode }) {
+export function AdminChrome({ children }: { children: ReactNode }) {
   const pathname = usePathname();
+  const router = useRouter();
+  const [loggingOut, setLoggingOut] = useState(false);
 
-  if (isPublicBookingPath(pathname)) {
-    return <main className="public-main">{children}</main>;
+  async function logout() {
+    setLoggingOut(true);
+    try {
+      await fetch("/api/auth/logout", { method: "POST" });
+      router.replace("/login");
+      router.refresh();
+    } finally {
+      setLoggingOut(false);
+    }
   }
 
   return (
@@ -48,7 +53,15 @@ export function AppChrome({ children }: { children: ReactNode }) {
         </nav>
 
         <div className="sidebar-footer">
-          <span className="status-dot" /> Core foundation
+          <div><span className="status-dot" /> Admin session</div>
+          <button
+            className="sidebar-logout"
+            type="button"
+            disabled={loggingOut}
+            onClick={logout}
+          >
+            {loggingOut ? "종료 중" : "로그아웃"}
+          </button>
         </div>
       </aside>
       <main className="main-content">{children}</main>
