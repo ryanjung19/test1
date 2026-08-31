@@ -1,11 +1,13 @@
-import { randomBytes } from "node:crypto";
+import { createHash, randomBytes, timingSafeEqual } from "node:crypto";
 
 import { and, eq, sql } from "drizzle-orm";
 
 import { db } from "@/db";
 import { bookings, paymentRequests, paymentTransactions } from "@/db/schema";
+import { tossKeys } from "@/lib/config/secrets";
 
 const TOSS_PROVIDER = "toss";
+const CALLBACK_STATE_TTL_MS = 15 * 60 * 1000;
 type FetchLike = typeof fetch;
 type PaymentNetRow = { type: "charge" | "refund"; amount: number };
 
@@ -41,11 +43,11 @@ export class TossPaymentError extends Error {
 }
 
 function tossClientKey() {
-  return process.env.TOSS_CLIENT_KEY;
+  return tossKeys()?.clientKey;
 }
 
 function tossSecretKey() {
-  return process.env.TOSS_SECRET_KEY;
+  return tossKeys()?.secretKey;
 }
 
 function appUrl() {
@@ -58,6 +60,28 @@ export function tossPaymentsConfigured() {
 
 function buildOrderId() {
   return `V1-${Date.now().toString(36)}-${randomBytes(9).toString("hex")}`;
+}
+
+function callbackStateDigest(value: string) {
+  return createHash("sha256").update(value).digest("base64url");
+}
+
+function callbackStateValid(
+  metadata: Record<string, unknown>,
+  state: string,
+) {
+  const expectedValue = typeof metadata.callbackStateHash === "string"
+    ? metadata.callbackStateHash
+    : null;
+  const expiresAt = typeof metadata.callbackExpiresAt === "string"
+    ? new Date(metadata.callbackExpiresAt)
+    : null;
+  if (!expectedValue || !expiresAt || Number.isNaN(expiresAt.getTime())) return false;
+  if (metadata.callbackConsumedAt || expiresAt <= new Date()) return false;
+
+  const provided = Buffer.from(callbackStateDigest(state));
+  const expected = Buffer.from(expectedValue);
+  return provided.length === expected.length && timingSafeEqual(provided, expected);
 }
 
 function netPaid(rows: PaymentNetRow[]) {
@@ -114,6 +138,8 @@ export async function createTossPaymentIntent(params: {
     );
 
     const orderId = buildOrderId();
+    const callbackState = randomBytes(32).toString("base64url");
+    const callbackExpiresAt = new Date(Date.now() + CALLBACK_STATE_TTL_MS);
     const [intent] = await tx.insert(paymentTransactions).values({
       bookingId: booking.id,
       paymentRequestId: request.id,
@@ -123,7 +149,11 @@ export async function createTossPaymentIntent(params: {
       provider: TOSS_PROVIDER,
       providerPaymentId: orderId,
       amount: outstanding,
-      metadata: { orderId },
+      metadata: {
+        orderId,
+        callbackStateHash: callbackStateDigest(callbackState),
+        callbackExpiresAt: callbackExpiresAt.toISOString(),
+      },
     }).returning();
 
     return {
@@ -132,8 +162,8 @@ export async function createTossPaymentIntent(params: {
       orderId,
       orderName: `${booking.title} ${request.kind}`.slice(0, 100),
       amount: outstanding,
-      successUrl: `${appUrl()}/payment/toss/success?intentId=${intent.id}`,
-      failUrl: `${appUrl()}/payment/toss/fail?intentId=${intent.id}`,
+      successUrl: `${appUrl()}/payment/toss/success?intentId=${intent.id}&state=${encodeURIComponent(callbackState)}`,
+      failUrl: `${appUrl()}/payment/toss/fail?intentId=${intent.id}&state=${encodeURIComponent(callbackState)}`,
     };
   });
 }
@@ -182,6 +212,7 @@ async function confirmWithToss(params: {
 
 export async function confirmTossPaymentIntent(params: {
   intentId: string;
+  callbackState: string;
   paymentKey: string;
   orderId: string;
   amount: number;
@@ -203,16 +234,13 @@ export async function confirmTossPaymentIntent(params: {
     ).limit(1);
 
     if (!intent || !intent.paymentRequestId) throw new TossPaymentError("payment_intent_not_found");
-    if (intent.status === "succeeded") {
-      const metadata = (intent.metadata ?? {}) as Record<string, unknown>;
-      return {
-        bookingId: intent.bookingId,
-        paymentKey: String(metadata.paymentKey ?? params.paymentKey),
-        status: "succeeded" as const,
-        alreadyConfirmed: true,
-      };
+    const initialMetadata = (intent.metadata ?? {}) as Record<string, unknown>;
+    if (!callbackStateValid(initialMetadata, params.callbackState)) {
+      throw new TossPaymentError("payment_intent_mismatch");
     }
-    if (intent.status !== "pending") throw new TossPaymentError("payment_intent_not_pending");
+    if (intent.status !== "pending" && intent.status !== "succeeded") {
+      throw new TossPaymentError("payment_intent_not_pending");
+    }
     if (intent.providerPaymentId !== params.orderId || intent.amount !== params.amount) {
       throw new TossPaymentError("payment_intent_mismatch");
     }
@@ -222,11 +250,23 @@ export async function confirmTossPaymentIntent(params: {
     [intent] = await tx.select().from(paymentTransactions)
       .where(eq(paymentTransactions.id, params.intentId)).limit(1);
     if (!intent || !intent.paymentRequestId) throw new TossPaymentError("payment_intent_not_found");
+    const currentMetadata = (intent.metadata ?? {}) as Record<string, unknown>;
+    if (!callbackStateValid(currentMetadata, params.callbackState)) {
+      throw new TossPaymentError("payment_intent_mismatch");
+    }
+    if (intent.providerPaymentId !== params.orderId || intent.amount !== params.amount) {
+      throw new TossPaymentError("payment_intent_mismatch");
+    }
     if (intent.status === "succeeded") {
-      const metadata = (intent.metadata ?? {}) as Record<string, unknown>;
+      await tx.update(paymentTransactions).set({
+        metadata: {
+          ...currentMetadata,
+          callbackConsumedAt: new Date().toISOString(),
+        },
+      }).where(eq(paymentTransactions.id, intent.id));
       return {
         bookingId: intent.bookingId,
-        paymentKey: String(metadata.paymentKey ?? params.paymentKey),
+        paymentKey: String(currentMetadata.paymentKey ?? params.paymentKey),
         status: "succeeded" as const,
         alreadyConfirmed: true,
       };
@@ -262,6 +302,8 @@ export async function confirmTossPaymentIntent(params: {
       status: "succeeded",
       approvedAt,
       metadata: {
+        ...((intent.metadata ?? {}) as Record<string, unknown>),
+        callbackConsumedAt: new Date().toISOString(),
         orderId: params.orderId,
         paymentKey: payment.paymentKey,
         tossStatus: payment.status,
@@ -286,28 +328,43 @@ export async function confirmTossPaymentIntent(params: {
 
 export async function cancelTossPaymentIntent(params: {
   intentId: string;
+  callbackState: string;
   code?: string;
   message?: string;
 }) {
-  const [intent] = await db.select().from(paymentTransactions).where(
-    and(
-      eq(paymentTransactions.id, params.intentId),
-      eq(paymentTransactions.provider, TOSS_PROVIDER),
-    ),
-  ).limit(1);
-  if (!intent) throw new TossPaymentError("payment_intent_not_found");
+  return db.transaction(async (tx) => {
+    await tx.execute(
+      sql`select pg_advisory_xact_lock(hashtext(${`toss-intent:${params.intentId}`})::bigint)`,
+    );
+    const [intent] = await tx.select().from(paymentTransactions).where(
+      and(
+        eq(paymentTransactions.id, params.intentId),
+        eq(paymentTransactions.provider, TOSS_PROVIDER),
+      ),
+    ).limit(1);
+    if (!intent) throw new TossPaymentError("payment_intent_not_found");
+    const metadata = (intent.metadata ?? {}) as Record<string, unknown>;
+    if (!callbackStateValid(metadata, params.callbackState)) {
+      throw new TossPaymentError("payment_intent_mismatch");
+    }
+    if (intent.status !== "pending") throw new TossPaymentError("payment_intent_not_pending");
 
-  if (intent.status === "pending") {
-    await db.update(paymentTransactions).set({
+    await tx.update(paymentTransactions).set({
       status: "cancelled",
       metadata: {
-        orderId: intent.providerPaymentId,
+        ...metadata,
+        callbackConsumedAt: new Date().toISOString(),
         failureCode: params.code,
         failureMessage: params.message,
       },
-    }).where(eq(paymentTransactions.id, intent.id));
-  }
-  return { bookingId: intent.bookingId };
+    }).where(
+      and(
+        eq(paymentTransactions.id, intent.id),
+        eq(paymentTransactions.status, "pending"),
+      ),
+    );
+    return { bookingId: intent.bookingId };
+  });
 }
 
 export async function getTossPaymentIntentContext(intentId: string) {

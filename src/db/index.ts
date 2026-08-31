@@ -1,9 +1,11 @@
 import { drizzle } from "drizzle-orm/node-postgres";
 import { Pool } from "pg";
 
+import { readSecret } from "@/lib/config/secrets";
+
 import * as schema from "./schema";
 
-const connectionString = process.env.DATABASE_URL;
+const connectionString = readSecret("DATABASE_URL");
 const globalForDb = globalThis as unknown as { pool?: Pool };
 
 export const pool =

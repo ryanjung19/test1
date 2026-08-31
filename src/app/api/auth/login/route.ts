@@ -20,7 +20,7 @@ export async function POST(request: Request) {
     }
 
     const payload = schema.parse(await request.json());
-    if (!verifyAdminPassword(payload.password)) {
+    if (!(await verifyAdminPassword(payload.password))) {
       return NextResponse.json({ error: "invalid_credentials" }, { status: 401 });
     }
 

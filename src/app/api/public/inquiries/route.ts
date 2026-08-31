@@ -2,6 +2,10 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 
 import { isDatabaseConfigured } from "@/db";
+import {
+  readJsonBody,
+  RequestBodyTooLargeError,
+} from "@/lib/http/read-json-body";
 import { createWebsiteInquiry } from "@/lib/inquiry/service";
 
 const inquirySchema = z.object({
@@ -28,12 +32,7 @@ export async function POST(request: Request) {
       );
     }
 
-    const contentLength = Number(request.headers.get("content-length") ?? "0");
-    if (contentLength > 20_000) {
-      return NextResponse.json({ error: "payload_too_large" }, { status: 413 });
-    }
-
-    const payload = inquirySchema.parse(await request.json());
+    const payload = inquirySchema.parse(await readJsonBody(request, 20_000));
     const eventStartsAt = new Date(payload.eventStartsAt);
     const eventEndsAt = new Date(payload.eventEndsAt);
 
@@ -63,6 +62,9 @@ export async function POST(request: Request) {
       { status: 201 },
     );
   } catch (error) {
+    if (error instanceof RequestBodyTooLargeError) {
+      return NextResponse.json({ error: "payload_too_large" }, { status: 413 });
+    }
     if (error instanceof z.ZodError) {
       return NextResponse.json(
         { error: "invalid_request", issues: error.issues },

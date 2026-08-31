@@ -1,8 +1,8 @@
 FROM node:24.20.0-bookworm-slim AS deps
 WORKDIR /app
 ENV NEXT_TELEMETRY_DISABLED=1
-COPY package.json ./
-RUN npm install --no-audit --no-fund
+COPY package.json package-lock.json ./
+RUN npm ci --no-audit --no-fund
 
 FROM deps AS builder
 COPY . .
@@ -25,8 +25,10 @@ HEALTHCHECK --interval=30s --timeout=5s --start-period=30s --retries=3 \
 CMD ["node", "server.js"]
 
 FROM deps AS dbtools
-COPY drizzle.config.ts tsconfig.json ./
-COPY src/db ./src/db
-COPY db ./db
-COPY scripts/nas-db-init.mjs ./scripts/nas-db-init.mjs
+COPY --chown=node:node drizzle.config.ts tsconfig.json ./
+COPY --chown=node:node src/db ./src/db
+COPY --chown=node:node db ./db
+COPY --chown=node:node scripts/nas-db-init.mjs ./scripts/nas-db-init.mjs
+RUN chown node:node /app
+USER node
 CMD ["npm", "run", "db:init:nas"]

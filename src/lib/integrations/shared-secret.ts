@@ -1,5 +1,7 @@
 import { timingSafeEqual } from "node:crypto";
 
+import { readSecret } from "@/lib/config/secrets";
+
 function safeEqual(provided: string | null, expected: string | undefined) {
   if (!expected) return null;
   if (!provided) return false;
@@ -16,7 +18,7 @@ function safeEqual(provided: string | null, expected: string | undefined) {
 export function verifyIntegrationSecret(request: Request) {
   const result = safeEqual(
     request.headers.get("x-integration-secret"),
-    process.env.INTEGRATION_WEBHOOK_SECRET,
+    readSecret("INTEGRATION_WEBHOOK_SECRET"),
   );
 
   if (result === null) {
@@ -29,7 +31,7 @@ export function verifyIntegrationSecret(request: Request) {
 export function verifyAutomationSecret(request: Request) {
   const result = safeEqual(
     request.headers.get("x-automation-secret"),
-    process.env.AUTOMATION_SECRET,
+    readSecret("AUTOMATION_SECRET"),
   );
 
   if (result === null) {

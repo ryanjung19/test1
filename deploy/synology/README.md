@@ -10,7 +10,8 @@ Keep application source and persistent data separate.
 /volume1/docker/vassment-one/
 ├─ repo/       # this Git repository checkout / uploaded source
 ├─ postgres/   # PostgreSQL persistent data
-└─ backup/     # pg_dump backups
+├─ backup/     # pg_dump backups
+└─ secrets/    # NAS-only protected secret files; never Git-tracked
 ```
 
 Do not place PostgreSQL data inside the Git checkout.
@@ -31,7 +32,7 @@ feat/vassment-one-booking-v0.1
 
 Before production secrets or customer data are introduced, move the source to the dedicated PRIVATE operating repository.
 
-## 2. Create NAS environment file
+## 2. Create NAS environment and secret files
 
 Copy:
 
@@ -45,7 +46,23 @@ to:
 deploy/synology/.env
 ```
 
-Edit every `CHANGE_TO_...` value. Never commit this `.env` file.
+The `.env` file contains only non-secret deployment settings. Never commit it.
+
+Create `/volume1/docker/vassment-one/secrets` with administrator-only permissions and add these files:
+
+```text
+postgres_password
+database_url
+admin_password_hash
+admin_session_secret
+customer_portal_secret
+integration_webhook_secret
+automation_secret
+toss_client_key
+toss_secret_key
+```
+
+Generate `admin_password_hash` with `npm run security:hash-admin-password`. Use independently generated random values of at least 32 bytes for each signing/shared secret. Keep the two Toss files empty until sandbox E2E. The PostgreSQL password in `database_url` must match `postgres_password`.
 
 For the first LAN test use:
 
@@ -54,7 +71,7 @@ APP_URL=http://192.168.123.103:3100
 APP_PORT=3100
 ```
 
-If PostgreSQL was already initialized in `/volume1/docker/vassment-one/postgres`, reuse the exact `POSTGRES_USER`, `POSTGRES_PASSWORD`, and `POSTGRES_DB` values from that first initialization. Changing the container environment later does not change the password of an existing PostgreSQL role.
+If PostgreSQL was already initialized in `/volume1/docker/vassment-one/postgres`, reuse the exact `POSTGRES_USER`, password secret, and `POSTGRES_DB` values from that first initialization. Changing the container configuration later does not change an existing PostgreSQL role password.
 
 For a new database, use a long URL-safe PostgreSQL password because it is also embedded in `DATABASE_URL`.
 
@@ -164,7 +181,7 @@ Run daily. Also replicate the backup directory to storage outside this NAS. A ba
 
 Only after the NAS application and database pass the internal checks:
 
-1. attach Cloudflare Tunnel and `booking.vassment.com`
+1. attach Cloudflare Tunnel and `booking.vassment.com`, then verify Cloudflare Access for admin paths plus WAF rate/concurrency limits for login, inquiry, and Toss webhook traffic
 2. connect Wix VASSMENT ONE booking surface
 3. configure HOLD expiry scheduler
 4. add Toss test keys and run payment/refund/webhook sandbox E2E

@@ -132,9 +132,11 @@ async function main() {
     paymentRequestId: request.id,
   });
   assert.equal(tossIntent.amount, 100_000, "Toss intent must use server-computed outstanding amount");
-
+  const callbackState = new URL(tossIntent.successUrl).searchParams.get("state");
+  assert.ok(callbackState, "Toss callback must include short-lived state");
   const tossConfirmed = await confirmTossPaymentIntent({
     intentId: tossIntent.intentId,
+    callbackState,
     paymentKey: "test-payment-key-ci",
     orderId: tossIntent.orderId,
     amount: tossIntent.amount,
@@ -157,6 +159,13 @@ async function main() {
     },
   });
   assert.equal(tossConfirmed.status, "succeeded");
+  await assert.rejects(() => confirmTossPaymentIntent({
+    intentId: tossIntent.intentId,
+    callbackState,
+    paymentKey: "test-payment-key-ci",
+    orderId: tossIntent.orderId,
+    amount: tossIntent.amount,
+  }));
 
   const tossRefund = await refundTossOnlinePayment({
     transactionId: tossIntent.intentId,

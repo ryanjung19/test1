@@ -1,5 +1,7 @@
 import { createHmac, timingSafeEqual } from "node:crypto";
 
+import { readSecret } from "@/lib/config/secrets";
+
 const DEFAULT_TTL_SECONDS = 30 * 24 * 60 * 60;
 
 type CustomerPortalPayload = {
@@ -8,7 +10,7 @@ type CustomerPortalPayload = {
 };
 
 function portalSecret() {
-  return process.env.CUSTOMER_PORTAL_SECRET;
+  return readSecret("CUSTOMER_PORTAL_SECRET");
 }
 
 function sign(encoded: string) {

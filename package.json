@@ -15,7 +15,9 @@
     "db:push": "drizzle-kit push --force",
     "db:studio": "drizzle-kit studio",
     "db:init:nas": "node scripts/nas-db-init.mjs",
-    "test:integration": "tsx scripts/integration-smoke.ts"
+    "test:integration": "tsx scripts/integration-smoke.ts",
+    "test:security": "tsx scripts/security-smoke.ts",
+    "security:hash-admin-password": "node scripts/hash-admin-password.mjs"
   },
   "dependencies": {
     "drizzle-orm": "0.45.2",

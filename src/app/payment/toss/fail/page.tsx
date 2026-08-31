@@ -1,7 +1,9 @@
 import { redirect } from "next/navigation";
 
 import { customerPortalUrl } from "@/lib/auth/customer-portal";
-import { cancelTossPaymentIntent } from "@/lib/payments/toss-flow";
+import {
+  cancelTossPaymentIntent,
+} from "@/lib/payments/toss-flow";
 
 export const dynamic = "force-dynamic";
 
@@ -10,12 +12,13 @@ type PageProps = {
     intentId?: string;
     code?: string;
     message?: string;
+    state?: string;
   }>;
 };
 
 export default async function TossFailPage({ searchParams }: PageProps) {
   const query = await searchParams;
-  if (!query.intentId) {
+  if (!query.intentId || !query.state) {
     return <main style={{ padding: 32 }}><h1>결제가 취소되었거나 실패했습니다.</h1></main>;
   }
 
@@ -23,6 +26,7 @@ export default async function TossFailPage({ searchParams }: PageProps) {
   try {
     const result = await cancelTossPaymentIntent({
       intentId: query.intentId,
+      callbackState: query.state,
       code: query.code,
       message: query.message,
     });

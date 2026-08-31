@@ -7,8 +7,10 @@ services:
     restart: unless-stopped
     environment:
       POSTGRES_USER: ${POSTGRES_USER:?POSTGRES_USER is required}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is required}
+      POSTGRES_PASSWORD_FILE: /run/secrets/postgres_password
       POSTGRES_DB: ${POSTGRES_DB:?POSTGRES_DB is required}
+    secrets:
+      - postgres_password
     volumes:
       - ${VASSMENT_DATA_ROOT:-/volume1/docker/vassment-one}/postgres:/var/lib/postgresql/data
     shm_size: 256mb
@@ -28,12 +30,18 @@ services:
     container_name: vassment-schema-init
     restart: "no"
     environment:
-      DATABASE_URL: ${DATABASE_URL:?DATABASE_URL is required}
+      DATABASE_URL_FILE: /run/secrets/database_url
+    secrets:
+      - database_url
     depends_on:
       postgres:
         condition: service_healthy
     networks:
       - internal
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
 
   app:
     build:
@@ -46,16 +54,26 @@ services:
       - "${APP_BIND_ADDRESS:-0.0.0.0}:${APP_PORT:-3100}:3000"
     environment:
       NODE_ENV: production
-      DATABASE_URL: ${DATABASE_URL:?DATABASE_URL is required}
+      DATABASE_URL_FILE: /run/secrets/database_url
       APP_URL: ${APP_URL:?APP_URL is required}
       DEFAULT_TIMEZONE: ${DEFAULT_TIMEZONE:-Asia/Seoul}
-      ADMIN_PASSWORD: ${ADMIN_PASSWORD:?ADMIN_PASSWORD is required}
-      ADMIN_SESSION_SECRET: ${ADMIN_SESSION_SECRET:?ADMIN_SESSION_SECRET is required}
-      CUSTOMER_PORTAL_SECRET: ${CUSTOMER_PORTAL_SECRET:?CUSTOMER_PORTAL_SECRET is required}
-      INTEGRATION_WEBHOOK_SECRET: ${INTEGRATION_WEBHOOK_SECRET:?INTEGRATION_WEBHOOK_SECRET is required}
-      AUTOMATION_SECRET: ${AUTOMATION_SECRET:?AUTOMATION_SECRET is required}
-      TOSS_CLIENT_KEY: ${TOSS_CLIENT_KEY:-}
-      TOSS_SECRET_KEY: ${TOSS_SECRET_KEY:-}
+      ADMIN_PASSWORD_HASH_FILE: /run/secrets/admin_password_hash
+      ADMIN_SESSION_SECRET_FILE: /run/secrets/admin_session_secret
+      CUSTOMER_PORTAL_SECRET_FILE: /run/secrets/customer_portal_secret
+      INTEGRATION_WEBHOOK_SECRET_FILE: /run/secrets/integration_webhook_secret
+      AUTOMATION_SECRET_FILE: /run/secrets/automation_secret
+      TOSS_CLIENT_KEY_FILE: /run/secrets/toss_client_key
+      TOSS_SECRET_KEY_FILE: /run/secrets/toss_secret_key
+      TOSS_LIVE_APPROVED: ${TOSS_LIVE_APPROVED:-false}
+    secrets:
+      - database_url
+      - admin_password_hash
+      - admin_session_secret
+      - customer_portal_secret
+      - integration_webhook_secret
+      - automation_secret
+      - toss_client_key
+      - toss_secret_key
     depends_on:
       postgres:
         condition: service_healthy
@@ -63,7 +81,31 @@ services:
         condition: service_completed_successfully
     networks:
       - internal
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
 
 networks:
   internal:
     name: vassment-one-internal
+
+secrets:
+  postgres_password:
+    file: ${VASSMENT_SECRETS_ROOT:-/volume1/docker/vassment-one/secrets}/postgres_password
+  database_url:
+    file: ${VASSMENT_SECRETS_ROOT:-/volume1/docker/vassment-one/secrets}/database_url
+  admin_password_hash:
+    file: ${VASSMENT_SECRETS_ROOT:-/volume1/docker/vassment-one/secrets}/admin_password_hash
+  admin_session_secret:
+    file: ${VASSMENT_SECRETS_ROOT:-/volume1/docker/vassment-one/secrets}/admin_session_secret
+  customer_portal_secret:
+    file: ${VASSMENT_SECRETS_ROOT:-/volume1/docker/vassment-one/secrets}/customer_portal_secret
+  integration_webhook_secret:
+    file: ${VASSMENT_SECRETS_ROOT:-/volume1/docker/vassment-one/secrets}/integration_webhook_secret
+  automation_secret:
+    file: ${VASSMENT_SECRETS_ROOT:-/volume1/docker/vassment-one/secrets}/automation_secret
+  toss_client_key:
+    file: ${VASSMENT_SECRETS_ROOT:-/volume1/docker/vassment-one/secrets}/toss_client_key
+  toss_secret_key:
+    file: ${VASSMENT_SECRETS_ROOT:-/volume1/docker/vassment-one/secrets}/toss_secret_key

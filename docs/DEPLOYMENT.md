@@ -28,7 +28,7 @@ CI는 PostgreSQL 17 컨테이너에서 schema, bootstrap, hardening, 핵심 예�
 ```text
 DATABASE_URL
 APP_URL
-ADMIN_PASSWORD
+ADMIN_PASSWORD_HASH
 ADMIN_SESSION_SECRET
 CUSTOMER_PORTAL_SECRET
 INTEGRATION_WEBHOOK_SECRET
@@ -40,7 +40,7 @@ TOSS_SECRET_KEY
 권장 규칙:
 
 - `APP_URL`: production HTTPS origin, trailing slash 없음
-- `ADMIN_PASSWORD`: 충분히 긴 무작위 비밀번호
+- `ADMIN_PASSWORD_HASH`: `npm run security:hash-admin-password`로 생성한 scrypt hash
 - `ADMIN_SESSION_SECRET`: 최소 32 random bytes
 - `CUSTOMER_PORTAL_SECRET`: admin secret과 다른 최소 32 random bytes
 - `INTEGRATION_WEBHOOK_SECRET`: chatbot/backend 전용 무작위 값
@@ -48,7 +48,7 @@ TOSS_SECRET_KEY
 - Toss 테스트 단계: `test_ck...`, `test_sk...`
 - Toss 라이브 단계: `live_ck...`, `live_sk...`
 
-Secret은 배포 플랫폼 secret store에만 저장한다.
+Secret은 배포 플랫폼 secret store에만 저장한다. Synology 배포에서는 Compose 환경변수 대신 `/volume1/docker/vassment-one/secrets`의 접근 제한 파일을 사용한다.
 
 ## 3. Production DB release 절차
 
@@ -267,6 +267,7 @@ Go-live 전 최소 1회 restore drill을 한다.
 - DB backup/restore 확인
 - HTTPS/domain 확인
 - admin login 확인
+- Cloudflare Access admin 보호와 login/inquiry/Toss webhook rate·concurrency 제한 확인
 - 홈페이지 inquiry E2E 확인
 - HOLD/confirmed/cancel 확인
 - Toss test 승인/환불/webhook 확인
@@ -281,6 +282,7 @@ Go-live 전 최소 1회 restore drill을 한다.
 - backup 없음
 - Toss test refund 미검증
 - webhook 미등록/미검증
+- Toss webhook rate/concurrency rule 미적용
 - HOLD job 미실행
 - admin/customer secret 누락
 - PUBLIC 저장소에 production secret/고객정보 존재

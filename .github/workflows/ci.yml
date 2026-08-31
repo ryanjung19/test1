@@ -19,7 +19,7 @@ jobs:
         image: postgres:17-alpine
         env:
           POSTGRES_USER: postgres
-          POSTGRES_PASSWORD: postgres
+          POSTGRES_PASSWORD: ci-${{ github.run_id }}-${{ github.run_attempt }}-${{ github.run_number }}
           POSTGRES_DB: vassment_one_booking
         ports:
           - 5432:5432
@@ -30,13 +30,8 @@ jobs:
           --health-retries 20
 
     env:
-      DATABASE_URL: postgresql://postgres:postgres@127.0.0.1:5432/vassment_one_booking
+      DATABASE_URL: postgresql://postgres:ci-${{ github.run_id }}-${{ github.run_attempt }}-${{ github.run_number }}@127.0.0.1:5432/vassment_one_booking
       APP_URL: http://127.0.0.1:3000
-      ADMIN_PASSWORD: ci-only-password
-      ADMIN_SESSION_SECRET: ci-only-session-secret-change-in-production-123456
-      INTEGRATION_WEBHOOK_SECRET: ci-only-integration-secret
-      AUTOMATION_SECRET: ci-only-automation-secret
-      CUSTOMER_PORTAL_SECRET: ci-only-customer-portal-secret-change-in-production
       TOSS_CLIENT_KEY: test_ck_ci
       TOSS_SECRET_KEY: test_sk_ci
 
@@ -50,10 +45,26 @@ jobs:
           node-version: "24.20.0"
 
       - name: Install dependencies
-        run: npm install --no-audit --no-fund
+        run: npm ci --no-audit --no-fund
+
+      - name: Generate ephemeral CI secrets
+        shell: bash
+        run: |
+          ADMIN_PASSWORD_VALUE="$(openssl rand -hex 24)"
+          ADMIN_PASSWORD_HASH_VALUE="$(printf '%s' "$ADMIN_PASSWORD_VALUE" | node scripts/hash-admin-password.mjs)"
+          {
+            echo "ADMIN_PASSWORD_HASH=$ADMIN_PASSWORD_HASH_VALUE"
+            echo "ADMIN_SESSION_SECRET=$(openssl rand -hex 32)"
+            echo "INTEGRATION_WEBHOOK_SECRET=$(openssl rand -hex 32)"
+            echo "AUTOMATION_SECRET=$(openssl rand -hex 32)"
+            echo "CUSTOMER_PORTAL_SECRET=$(openssl rand -hex 32)"
+          } >> "$GITHUB_ENV"
 
       - name: Lint
         run: npm run lint
+
+      - name: Security smoke checks
+        run: npm run test:security
 
       - name: Build
         run: npm run build
@@ -90,7 +101,7 @@ jobs:
           docker run -d --name vassment-app-ci --network host \
             -e DATABASE_URL="$DATABASE_URL" \
             -e APP_URL="$APP_URL" \
-            -e ADMIN_PASSWORD="$ADMIN_PASSWORD" \
+            -e ADMIN_PASSWORD_HASH="$ADMIN_PASSWORD_HASH" \
             -e ADMIN_SESSION_SECRET="$ADMIN_SESSION_SECRET" \
             -e INTEGRATION_WEBHOOK_SECRET="$INTEGRATION_WEBHOOK_SECRET" \
             -e AUTOMATION_SECRET="$AUTOMATION_SECRET" \

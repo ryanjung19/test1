@@ -3,7 +3,6 @@ import { redirect } from "next/navigation";
 import { customerPortalUrl } from "@/lib/auth/customer-portal";
 import {
   confirmTossPaymentIntent,
-  getTossPaymentIntentContext,
   TossPaymentError,
 } from "@/lib/payments/toss-flow";
 
@@ -15,6 +14,7 @@ type PageProps = {
     paymentKey?: string;
     orderId?: string;
     amount?: string;
+    state?: string;
   }>;
 };
 
@@ -22,7 +22,7 @@ export default async function TossSuccessPage({ searchParams }: PageProps) {
   const query = await searchParams;
   const amount = Number(query.amount);
 
-  if (!query.intentId || !query.paymentKey || !query.orderId || !Number.isInteger(amount)) {
+  if (!query.intentId || !query.paymentKey || !query.orderId || !query.state || !Number.isInteger(amount)) {
     return <main style={{ padding: 32 }}><h1>결제 승인 정보가 올바르지 않습니다.</h1></main>;
   }
 
@@ -30,20 +30,19 @@ export default async function TossSuccessPage({ searchParams }: PageProps) {
   try {
     result = await confirmTossPaymentIntent({
       intentId: query.intentId,
+      callbackState: query.state,
       paymentKey: query.paymentKey,
       orderId: query.orderId,
       amount,
     });
   } catch (error) {
     console.error(error);
-    const context = await getTossPaymentIntentContext(query.intentId);
-    const returnUrl = context ? customerPortalUrl(context.bookingId) : null;
     const message = error instanceof TossPaymentError ? error.code : "internal_error";
     return (
       <main style={{ padding: 32, fontFamily: "sans-serif" }}>
         <h1>결제 승인을 완료하지 못했습니다.</h1>
         <p>{message}</p>
-        {returnUrl ? <a href={`${returnUrl}&payment=confirm_failed`}>예약 상세로 돌아가기</a> : null}
+        <p>원래 예약 링크로 돌아가 상태를 확인해 주세요.</p>
       </main>
     );
   }

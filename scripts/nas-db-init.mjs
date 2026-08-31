@@ -4,8 +4,15 @@ import { readFile } from "node:fs/promises";
 import pg from "pg";
 
 const { Pool } = pg;
-const connectionString = process.env.DATABASE_URL;
+async function configuredValue(name) {
+  const file = process.env[`${name}_FILE`]?.trim();
+  if (file) return (await readFile(file, "utf8")).trim();
+  return process.env[name]?.trim();
+}
+
+const connectionString = await configuredValue("DATABASE_URL");
 if (!connectionString) throw new Error("DATABASE_URL is required");
+process.env.DATABASE_URL = connectionString;
 
 const expectedTables = [
   "organizations",

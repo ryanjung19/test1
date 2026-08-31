@@ -2,6 +2,7 @@ import { and, eq, sql } from "drizzle-orm";
 
 import { db } from "@/db";
 import { paymentRequests, paymentTransactions } from "@/db/schema";
+import { tossKeys } from "@/lib/config/secrets";
 
 type FetchLike = typeof fetch;
 
@@ -39,7 +40,7 @@ export class TossRefundError extends Error {
 }
 
 function secretKey() {
-  return process.env.TOSS_SECRET_KEY;
+  return tossKeys()?.secretKey;
 }
 
 function originalId(metadata: Record<string, unknown> | null) {

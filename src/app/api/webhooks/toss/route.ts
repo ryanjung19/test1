@@ -5,6 +5,10 @@ import {
   reconcileTossPayment,
   TossReconciliationError,
 } from "@/lib/payments/toss-reconcile";
+import {
+  readJsonBody,
+  RequestBodyTooLargeError,
+} from "@/lib/http/read-json-body";
 
 const envelopeSchema = z.object({
   eventType: z.string(),
@@ -13,12 +17,12 @@ const envelopeSchema = z.object({
 }).passthrough();
 
 const paymentDataSchema = z.object({
-  paymentKey: z.string().min(1),
+  paymentKey: z.string().min(1).max(200),
 }).passthrough();
 
 export async function POST(request: Request) {
   try {
-    const event = envelopeSchema.parse(await request.json());
+    const event = envelopeSchema.parse(await readJsonBody(request, 32_000));
 
     if (event.eventType !== "PAYMENT_STATUS_CHANGED") {
       return NextResponse.json({ status: "ignored" });
@@ -29,6 +33,9 @@ export async function POST(request: Request) {
 
     return NextResponse.json({ status: "ok", result });
   } catch (error) {
+    if (error instanceof RequestBodyTooLargeError) {
+      return NextResponse.json({ error: "payload_too_large" }, { status: 413 });
+    }
     if (error instanceof z.ZodError) {
       return NextResponse.json({ error: "invalid_webhook" }, { status: 400 });
     }

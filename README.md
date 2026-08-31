@@ -74,7 +74,7 @@ No real Toss key or real payment is used in CI.
 - actual insertion of `/reserve` into the current Vassment One website
 - actual existing-chatbot API connection
 - actual Toss test-key sandbox E2E, webhook registration, then live-key transition
-- edge rate limiting / bot protection for admin login and public inquiry
+- edge rate limiting / bot protection for admin login, public inquiry, and Toss webhook provider-query traffic
 - actual prospect discovery provider
 - email / Kakao / SNS adapters
 - external e-sign provider API automation if required
@@ -115,7 +115,7 @@ See `.env.example`.
 ```text
 DATABASE_URL
 APP_URL
-ADMIN_PASSWORD
+ADMIN_PASSWORD_HASH
 ADMIN_SESSION_SECRET
 CUSTOMER_PORTAL_SECRET
 INTEGRATION_WEBHOOK_SECRET
@@ -185,7 +185,7 @@ Current operational areas:
 - `/crm`
 - booking quote/contract detail screens
 
-Current auth is intentionally a single strong administrator password. The data model already contains members/roles for future multi-user RBAC.
+Current auth is intentionally a single strong administrator password stored as a scrypt hash. The data model already contains members/roles for future multi-user RBAC.
 
 ## HOLD automation
 

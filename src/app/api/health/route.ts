@@ -2,22 +2,12 @@ import { sql } from "drizzle-orm";
 import { NextResponse } from "next/server";
 
 import { db, isDatabaseConfigured } from "@/db";
+import { productionConfigurationIssues } from "@/lib/config/secrets";
 
 export const dynamic = "force-dynamic";
 
-const requiredProductionSecrets = [
-  "ADMIN_PASSWORD",
-  "ADMIN_SESSION_SECRET",
-  "INTEGRATION_WEBHOOK_SECRET",
-  "AUTOMATION_SECRET",
-  "CUSTOMER_PORTAL_SECRET",
-] as const;
-
 export async function GET() {
-  const missingSecrets =
-    process.env.NODE_ENV === "production"
-      ? requiredProductionSecrets.filter((name) => !process.env[name])
-      : [];
+  const configurationIssues = productionConfigurationIssues();
 
   let database = false;
   if (isDatabaseConfigured()) {
@@ -29,13 +19,13 @@ export async function GET() {
     }
   }
 
-  const ready = database && missingSecrets.length === 0;
+  const ready = database && configurationIssues.length === 0;
 
   return NextResponse.json(
     {
       status: ready ? "ok" : "not_ready",
       database,
-      configuration: missingSecrets.length === 0 ? "ok" : "incomplete",
+      configuration: configurationIssues.length === 0 ? "ok" : "incomplete",
     },
     {
       status: ready ? 200 : 503,
