@@ -14,6 +14,11 @@ services:
     volumes:
       - ${VASSMENT_DATA_ROOT:-/volume1/docker/vassment-one}/postgres:/var/lib/postgresql/data
     shm_size: 256mb
+    # Synology DSM can leave compose bridge forwarding in a stale state after
+    # project rebuilds. Publish only the app port from the shared namespace;
+    # PostgreSQL itself remains unexposed.
+    ports:
+      - "${APP_BIND_ADDRESS:-0.0.0.0}:${APP_PORT:-3100}:3000"
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
       interval: 10s
@@ -27,19 +32,27 @@ services:
       context: ../..
       dockerfile: Dockerfile
       target: dbtools
+      network: host
     container_name: vassment-schema-init
     restart: "no"
     environment:
       DATABASE_URL_FILE: /run/secrets/database_url
     secrets:
       - database_url
+    tmpfs:
+      - /run/vassment-private
     depends_on:
       postgres:
         condition: service_healthy
-    networks:
-      - internal
+    network_mode: service:postgres
     cap_drop:
       - ALL
+    cap_add:
+      - CHOWN
+      - DAC_OVERRIDE
+      - FOWNER
+      - SETGID
+      - SETUID
     security_opt:
       - no-new-privileges:true
 
@@ -48,10 +61,9 @@ services:
       context: ../..
       dockerfile: Dockerfile
       target: app
+      network: host
     container_name: vassment-app
     restart: unless-stopped
-    ports:
-      - "${APP_BIND_ADDRESS:-0.0.0.0}:${APP_PORT:-3100}:3000"
     environment:
       NODE_ENV: production
       DATABASE_URL_FILE: /run/secrets/database_url
@@ -74,15 +86,22 @@ services:
       - automation_secret
       - toss_client_key
       - toss_secret_key
+    tmpfs:
+      - /run/vassment-private
     depends_on:
       postgres:
         condition: service_healthy
       schema-init:
         condition: service_completed_successfully
-    networks:
-      - internal
+    network_mode: service:postgres
     cap_drop:
       - ALL
+    cap_add:
+      - CHOWN
+      - DAC_OVERRIDE
+      - FOWNER
+      - SETGID
+      - SETUID
     security_opt:
       - no-new-privileges:true
 
