@@ -1,0 +1,130 @@
+name: CI
+
+on:
+  pull_request:
+    branches:
+      - main
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    services:
+      postgres:
+        image: postgres:17-alpine
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: ci-${{ github.run_id }}-${{ github.run_attempt }}-${{ github.run_number }}
+          POSTGRES_DB: vassment_one_booking
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d vassment_one_booking"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 20
+
+    env:
+      DATABASE_URL: postgresql://postgres:ci-${{ github.run_id }}-${{ github.run_attempt }}-${{ github.run_number }}@127.0.0.1:5432/vassment_one_booking
+      APP_URL: http://127.0.0.1:3000
+      TOSS_CLIENT_KEY: test_ck_ci
+      TOSS_SECRET_KEY: test_sk_ci
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version: "24.20.0"
+
+      - name: Install dependencies
+        run: npm ci --no-audit --no-fund
+
+      - name: Generate ephemeral CI secrets
+        shell: bash
+        run: |
+          ADMIN_PASSWORD_VALUE="$(openssl rand -hex 24)"
+          ADMIN_PASSWORD_HASH_VALUE="$(printf '%s' "$ADMIN_PASSWORD_VALUE" | node scripts/hash-admin-password.mjs)"
+          {
+            echo "ADMIN_PASSWORD_HASH=$ADMIN_PASSWORD_HASH_VALUE"
+            echo "ADMIN_SESSION_SECRET=$(openssl rand -hex 32)"
+            echo "INTEGRATION_WEBHOOK_SECRET=$(openssl rand -hex 32)"
+            echo "AUTOMATION_SECRET=$(openssl rand -hex 32)"
+            echo "CUSTOMER_PORTAL_SECRET=$(openssl rand -hex 32)"
+          } >> "$GITHUB_ENV"
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Security smoke checks
+        run: npm run test:security
+
+      - name: Build
+        run: npm run build
+
+      - name: Generate migration SQL
+        run: |
+          rm -rf drizzle
+          npm run db:generate
+          test -n "$(find drizzle -type f -name '*.sql' -print -quit)"
+
+      - name: Apply schema to PostgreSQL
+        run: npm run db:push
+
+      - name: Bootstrap Vassment One
+        run: psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -f db/bootstrap.sql
+
+      - name: Apply database hardening
+        run: psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -f db/hardening.sql
+
+      - name: Integration smoke test
+        run: npm run test:integration
+
+      - name: Toss webhook reconciliation smoke test
+        run: npx tsx scripts/toss-reconciliation-smoke.ts
+
+      - name: Build production app image
+        run: docker build --target app -t vassment-one-booking-os:ci .
+
+      - name: Build database tools image
+        run: docker build --target dbtools -t vassment-one-dbtools:ci .
+
+      - name: Validate production container health
+        run: |
+          docker run -d --name vassment-app-ci --network host \
+            -e DATABASE_URL="$DATABASE_URL" \
+            -e APP_URL="$APP_URL" \
+            -e ADMIN_PASSWORD_HASH="$ADMIN_PASSWORD_HASH" \
+            -e ADMIN_SESSION_SECRET="$ADMIN_SESSION_SECRET" \
+            -e INTEGRATION_WEBHOOK_SECRET="$INTEGRATION_WEBHOOK_SECRET" \
+            -e AUTOMATION_SECRET="$AUTOMATION_SECRET" \
+            -e CUSTOMER_PORTAL_SECRET="$CUSTOMER_PORTAL_SECRET" \
+            -e TOSS_CLIENT_KEY="$TOSS_CLIENT_KEY" \
+            -e TOSS_SECRET_KEY="$TOSS_SECRET_KEY" \
+            vassment-one-booking-os:ci
+
+          ready=0
+          for attempt in $(seq 1 30); do
+            if curl --fail --silent --show-error http://127.0.0.1:3000/api/health >/tmp/health.json; then
+              ready=1
+              break
+            fi
+            sleep 1
+          done
+
+          if [ "$ready" -ne 1 ]; then
+            docker logs vassment-app-ci
+            exit 1
+          fi
+
+          cat /tmp/health.json
+          grep -q '"status":"ok"' /tmp/health.json
+          grep -q '"database":true' /tmp/health.json
+          docker rm -f vassment-app-ci

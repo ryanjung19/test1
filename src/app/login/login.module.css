@@ -1,0 +1,123 @@
+.screen {
+  display: grid;
+  min-height: 100vh;
+  place-items: center;
+  padding: 24px;
+  background: #efeeea;
+  color: #111111;
+}
+
+.card {
+  width: min(440px, 100%);
+  padding: 34px;
+  border: 1px solid #d8d6d0;
+  border-radius: 14px;
+  background: #ffffff;
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 38px;
+}
+
+.mark {
+  display: grid;
+  width: 42px;
+  height: 42px;
+  place-items: center;
+  background: #111111;
+  color: #ffffff;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.brand div:last-child {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.brand strong {
+  font-size: 13px;
+  letter-spacing: 0.05em;
+}
+
+.brand span {
+  color: #7b7973;
+  font-size: 11px;
+}
+
+.card h1 {
+  margin: 0 0 8px;
+  font-size: 30px;
+  letter-spacing: -0.05em;
+}
+
+.copy {
+  margin: 0 0 24px;
+  color: #73716b;
+  font-size: 12px;
+  line-height: 1.6;
+}
+
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.form label {
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.form input {
+  width: 100%;
+  height: 48px;
+  padding: 0 13px;
+  border: 1px solid #d4d2cc;
+  border-radius: 8px;
+  font: inherit;
+  outline: none;
+}
+
+.form input:focus {
+  border-color: #111111;
+}
+
+.form button {
+  height: 48px;
+  border: 1px solid #111111;
+  border-radius: 8px;
+  background: #111111;
+  color: #ffffff;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.form button:disabled {
+  opacity: 0.5;
+}
+
+.error {
+  padding: 10px 12px;
+  border: 1px solid #e1bbb5;
+  border-radius: 8px;
+  background: #fff7f5;
+  color: #8d352b;
+  font-size: 11px;
+  line-height: 1.5;
+}
+
+.note {
+  margin: 22px 0 0;
+  padding-top: 16px;
+  border-top: 1px solid #eceae5;
+  color: #8b8983;
+  font-size: 10px;
+  line-height: 1.6;
+}

@@ -1,0 +1,41 @@
+{
+  "name": "vassment-one-booking-os",
+  "version": "0.1.0",
+  "private": true,
+  "engines": {
+    "node": ">=24.20.0 <25"
+  },
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "eslint .",
+    "db:generate": "drizzle-kit generate",
+    "db:migrate": "drizzle-kit migrate",
+    "db:push": "drizzle-kit push --force",
+    "db:studio": "drizzle-kit studio",
+    "db:init:nas": "node scripts/nas-db-init.mjs",
+    "test:integration": "tsx scripts/integration-smoke.ts",
+    "test:security": "tsx scripts/security-smoke.ts",
+    "security:hash-admin-password": "node scripts/hash-admin-password.mjs"
+  },
+  "dependencies": {
+    "drizzle-orm": "0.45.2",
+    "next": "16.3.3",
+    "pg": "8.23.0",
+    "react": "19.2.8",
+    "react-dom": "19.2.8",
+    "zod": "4.5.4"
+  },
+  "devDependencies": {
+    "@types/node": "^24.0.0",
+    "@types/pg": "8.23.1",
+    "@types/react": "19.2.18",
+    "@types/react-dom": "19.2.5",
+    "drizzle-kit": "0.31.10",
+    "eslint": "9.39.5",
+    "eslint-config-next": "16.3.3",
+    "tsx": "4.23.13",
+    "typescript": "6.0.3"
+  }
+}

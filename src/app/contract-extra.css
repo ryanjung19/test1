@@ -1,0 +1,113 @@
+.contract-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.contract-card {
+  padding: 20px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: white;
+}
+
+.contract-card-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 18px;
+}
+
+.contract-card-header h2 {
+  margin: 8px 0 4px;
+  font-size: 18px;
+}
+
+.contract-card-header p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 9px;
+}
+
+.contract-form {
+  display: grid;
+  grid-template-columns: 2fr 1fr 1fr auto;
+  gap: 8px;
+  align-items: end;
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px solid #ecece8;
+}
+
+.contract-form label {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.contract-form label > span {
+  color: var(--muted);
+  font-size: 9px;
+  font-weight: 700;
+}
+
+.contract-form input {
+  min-width: 0;
+  height: 38px;
+  padding: 0 8px;
+  border: 1px solid var(--line);
+  border-radius: 7px;
+  font: inherit;
+  font-size: 10px;
+}
+
+.contract-status-actions {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 7px;
+  margin-top: 12px;
+}
+
+.contract-dates {
+  display: flex;
+  gap: 12px;
+  margin-right: auto;
+  color: var(--muted);
+  font-size: 9px;
+}
+
+.contract-status-signed {
+  color: #216546;
+}
+
+.contract-status-sent {
+  color: #80601d;
+}
+
+.contract-status-cancelled {
+  color: #8e3c34;
+}
+
+@media (max-width: 900px) {
+  .contract-form {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+@media (max-width: 620px) {
+  .contract-card-header,
+  .contract-status-actions {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .contract-form {
+    grid-template-columns: 1fr;
+  }
+
+  .contract-dates {
+    flex-direction: column;
+  }
+}
