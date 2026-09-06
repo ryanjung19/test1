@@ -1,0 +1,18 @@
+{
+  "name": "StockPulse — 급상승 종목 알림",
+  "short_name": "StockPulse",
+  "description": "가격·거래량 이상 움직임을 빠르게 감지해 알려주는 시장 알림 서비스",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#f5f7fa",
+  "theme_color": "#07111f",
+  "lang": "ko-KR",
+  "icons": [
+    {
+      "src": "/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
