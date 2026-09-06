@@ -75,7 +75,7 @@ export default function AuthPage() {
       return;
     }
 
-    window.location.assign("/account");
+    window.location.assign("/app");
   }
 
   async function handleMagicLink() {
