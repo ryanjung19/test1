@@ -25,20 +25,21 @@ a { color: inherit; text-decoration: none; }
 button { font: inherit; }
 ::selection { background: var(--pink); color: var(--ink); }
 
+/* Reference header: the hero image continues behind the header.
+   Only the LEFT side receives the white veil seen in the approved reference.
+   The right side is deliberately transparent so the hero remains visible. */
 .reference-header {
-  background:
-    linear-gradient(
-      90deg,
-      rgba(255,255,255,.98) 0%,
-      rgba(255,255,255,.96) 46%,
-      rgba(255,255,255,.82) 62%,
-      rgba(255,255,255,.48) 77%,
-      rgba(255,255,255,.18) 100%
-    );
-  backdrop-filter: blur(18px) saturate(125%);
-  -webkit-backdrop-filter: blur(18px) saturate(125%);
-  border-bottom: 1px solid rgba(255,255,255,.34);
-  box-shadow: 0 8px 32px rgba(20,16,22,.035);
+  background: linear-gradient(
+    90deg,
+    rgba(255,255,255,.99) 0%,
+    rgba(255,255,255,.99) 34%,
+    rgba(255,255,255,.92) 43%,
+    rgba(255,255,255,.66) 50%,
+    rgba(255,255,255,.24) 57%,
+    rgba(255,255,255,0) 66%
+  );
+  border: 0;
+  box-shadow: none;
 }
 
 .mesh {
@@ -67,10 +68,10 @@ button { font: inherit; }
 
 @media (max-width: 768px) {
   body { padding-bottom: 74px; }
+  /* Mobile reference uses a dark transparent top bar over the hero. */
   .reference-header {
-    background: linear-gradient(180deg, rgba(255,255,255,.92), rgba(255,255,255,.78));
-    backdrop-filter: blur(18px) saturate(120%);
-    -webkit-backdrop-filter: blur(18px) saturate(120%);
-    border-bottom-color: rgba(255,255,255,.5);
+    background: linear-gradient(180deg, rgba(10,10,14,.78), rgba(10,10,14,.45));
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
   }
 }
