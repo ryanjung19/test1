@@ -18,26 +18,26 @@ export function SiteHeader() {
   return (
     <>
       <header className="reference-header fixed inset-x-0 top-0 z-50">
-        <div className="mx-auto flex h-[72px] max-w-[1480px] items-center justify-between px-5 md:h-[78px] md:px-10">
-          <Link href="/" className="flex flex-col leading-none">
-            <span className="text-[24px] font-black tracking-[-0.085em] md:text-[27px]">MEET<span className="text-[#ff7fa9]">SET</span></span>
-            <span className="mt-1 text-[9px] font-semibold tracking-[0.18em] text-black/38">FAN MEETS REAL MOMENTS</span>
+        <div className="mx-auto flex h-[62px] max-w-[1480px] items-center justify-between px-5 md:h-[64px] md:px-10">
+          <Link href="/" className="flex flex-col leading-none text-white md:text-black">
+            <span className="text-[22px] font-black tracking-[-0.085em] md:text-[25px]">MEET<span className="text-[#ff7fa9]">SET</span></span>
+            <span className="mt-1 hidden text-[8px] font-semibold tracking-[0.18em] text-black/42 md:block">FAN MEETS REAL MOMENTS</span>
           </Link>
 
-          <nav className="hidden items-center gap-9 text-[13px] font-semibold md:flex">
+          <nav className="hidden items-center gap-9 text-[12px] font-semibold text-black md:flex">
             {nav.map(([href, label], index) => (
-              <Link key={href + label} href={href} className={`relative py-7 transition-opacity hover:opacity-50 ${index === 0 ? "after:absolute after:inset-x-0 after:bottom-0 after:h-[2px] after:bg-[#ff7fa9]" : ""}`}>
+              <Link key={href + label} href={href} className={`relative py-[22px] transition-opacity hover:opacity-50 ${index === 0 ? "after:absolute after:inset-x-0 after:bottom-0 after:h-[2px] after:bg-[#ff7fa9]" : ""}`}>
                 {label}
               </Link>
             ))}
           </nav>
 
-          <div className="flex items-center gap-2 md:gap-4">
-            <button aria-label="Search" className="grid size-9 place-items-center rounded-full transition hover:bg-white/45"><Search size={17} /></button>
-            <button className="hidden items-center gap-1 text-xs font-semibold md:flex">KR <ChevronDown size={13} /></button>
-            <Link href="/my" className="hidden text-xs font-semibold transition-opacity hover:opacity-50 md:block">Log in</Link>
-            <Link href="/work" className="hidden rounded-xl bg-[#ff8db4] px-5 py-3 text-xs font-bold text-black shadow-[0_8px_24px_rgba(255,141,180,.28)] transition hover:-translate-y-0.5 md:block">Sign up</Link>
-            <button onClick={() => setOpen(true)} aria-label="Open menu" className="grid size-10 place-items-center rounded-full transition hover:bg-white/45 md:hidden"><Menu size={21} /></button>
+          <div className="flex items-center gap-2 text-white md:gap-4">
+            <button aria-label="Search" className="grid size-9 place-items-center rounded-full transition hover:bg-white/10"><Search size={16} /></button>
+            <button className="hidden items-center gap-1 text-[11px] font-semibold md:flex">KR <ChevronDown size={12} /></button>
+            <Link href="/my" className="hidden text-[11px] font-semibold transition-opacity hover:opacity-60 md:block">Log in</Link>
+            <Link href="/work" className="hidden rounded-xl bg-[#ff8db4] px-5 py-3 text-[11px] font-bold text-black shadow-[0_8px_24px_rgba(255,141,180,.22)] transition hover:-translate-y-0.5 md:block">Sign up</Link>
+            <button onClick={() => setOpen(true)} aria-label="Open menu" className="grid size-10 place-items-center rounded-full transition hover:bg-white/10 md:hidden"><Menu size={21} /></button>
           </div>
         </div>
       </header>
