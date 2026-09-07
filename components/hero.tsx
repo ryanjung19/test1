@@ -1,51 +1,49 @@
 "use client";
 
-import { ArrowDownRight, Play } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 import { motion } from "motion/react";
 import Image from "next/image";
 import Link from "next/link";
 
 export function Hero() {
   return (
-    <section className="relative min-h-[96vh] overflow-hidden px-4 pb-10 pt-28 md:px-8 md:pt-32">
-      <div className="mx-auto grid min-h-[78vh] max-w-7xl grid-cols-1 gap-4 lg:grid-cols-[1.08fr_.92fr]">
-        <div className="mesh relative flex min-h-[560px] flex-col justify-between overflow-hidden rounded-[36px] bg-[#ffd7e4] p-7 md:p-10 lg:min-h-[720px]">
-          <motion.div initial={{ y: 24, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ duration: .7 }}>
-            <div className="mb-10 inline-flex rounded-full border border-black/10 bg-white/60 px-4 py-2 text-[11px] font-bold uppercase tracking-[0.18em] backdrop-blur">Curated fan experiences · Seoul</div>
-            <h1 className="display-tight max-w-[760px] text-[18vw] font-black md:text-[11vw] lg:text-[7.6rem]">
-              CLOSER<br />THAN<br /><span className="text-white [text-shadow:0_1px_0_rgba(0,0,0,.03)]">EVER.</span>
+    <section className="relative overflow-hidden pt-[72px] md:pt-[78px]">
+      <div className="relative min-h-[610px] w-full overflow-hidden bg-[#111] md:min-h-[760px]">
+        <Image
+          src="https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&w=2200&q=94"
+          alt="Featured MEETSET creator"
+          fill
+          priority
+          className="object-cover object-[58%_38%] md:object-[62%_40%]"
+          sizes="100vw"
+        />
+        <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(8,8,12,.78)_0%,rgba(8,8,12,.58)_27%,rgba(8,8,12,.12)_58%,rgba(8,8,12,.12)_100%)]" />
+        <div className="absolute inset-x-0 bottom-0 h-40 bg-gradient-to-t from-black/35 to-transparent" />
+
+        <div className="relative z-10 mx-auto flex min-h-[610px] max-w-[1480px] flex-col justify-center px-6 pb-20 pt-20 text-white md:min-h-[760px] md:px-10 md:pb-24">
+          <motion.div initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ duration: .7 }} className="max-w-[680px]">
+            <p className="mb-4 text-[11px] font-bold uppercase tracking-[0.23em] text-white/80 md:text-[13px]">Special fan meeting</p>
+            <h1 className="max-w-[640px] text-[62px] font-light leading-[.9] tracking-[-0.065em] sm:text-[74px] md:text-[98px] lg:text-[112px]">
+              Closer<br />Than <span className="text-[#ffc2d5]">Ever</span>
             </h1>
+            <p className="mt-6 text-base font-medium tracking-[-0.02em] text-white/88 md:text-lg">가까운 순간이, 더 특별해지니까.</p>
+            <Link href="/projects/serin-black-night" className="mt-8 inline-flex items-center gap-8 rounded-full bg-[#ff8db4] px-6 py-3.5 text-sm font-bold text-black shadow-[0_12px_30px_rgba(255,141,180,.25)] transition hover:-translate-y-0.5">
+              View Project <ArrowRight size={17} />
+            </Link>
           </motion.div>
 
-          <div className="relative z-10 flex flex-col gap-6 md:flex-row md:items-end md:justify-between">
-            <p className="max-w-md text-base font-medium leading-relaxed text-black/65 md:text-lg">Meet the moment. Keep the memory. MEETSET curates intimate fan meetings, photo events and live projects by J&Company.</p>
-            <Link href="#projects" className="group inline-flex items-center gap-4 self-start rounded-full bg-black px-5 py-3 text-sm font-bold text-white">
-              Explore projects
-              <span className="grid size-9 place-items-center rounded-full bg-white text-black transition-transform group-hover:rotate-[-8deg]"><ArrowDownRight size={17} /></span>
-            </Link>
-          </div>
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: .5, duration: .8 }} className="absolute bottom-7 left-1/2 flex -translate-x-1/2 items-center gap-5 text-[10px] text-white/62">
+            <span className="h-[2px] w-10 bg-[#ff8db4]" />
+            <span className="text-white">01</span>
+            <span>02</span>
+            <span>03</span>
+          </motion.div>
 
-          <motion.div initial={{ scale: .9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={{ delay: .25, duration: .8 }} className="absolute -right-14 top-24 h-[48%] w-[45%] rotate-[8deg] overflow-hidden rounded-[999px_999px_40px_999px] border-[10px] border-white/55 opacity-85 shadow-2xl md:right-6 md:top-12 md:h-[50%] md:w-[36%]">
-            <Image src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=900&q=90" alt="MEETSET creator" fill priority className="object-cover" />
+          <motion.div initial={{ opacity: 0, x: 14 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: .45, duration: .7 }} className="absolute bottom-8 right-8 hidden text-right md:block">
+            <p className="font-serif text-3xl italic leading-[.95] text-[#ff9fbd]">Real<br />Moments<br />Together</p>
+            <p className="mt-5 text-[9px] font-semibold uppercase tracking-[.17em] text-white/55">MEETSET<br />FAN EXPERIENCES</p>
           </motion.div>
         </div>
-
-        <motion.div initial={{ x: 28, opacity: 0 }} animate={{ x: 0, opacity: 1 }} transition={{ delay: .18, duration: .75 }} className="group relative min-h-[460px] overflow-hidden rounded-[36px] bg-black lg:min-h-[720px]">
-          <Image src="https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&w=1500&q=92" alt="Featured fan project" fill priority className="object-cover transition duration-700 group-hover:scale-[1.025]" />
-          <div className="absolute inset-0 bg-gradient-to-t from-black/78 via-black/10 to-transparent" />
-          <div className="absolute left-6 right-6 top-6 flex items-center justify-between md:left-8 md:right-8 md:top-8">
-            <span className="rounded-full bg-white/88 px-4 py-2 text-xs font-bold backdrop-blur">FEATURED · ON SALE</span>
-            <button className="grid size-11 place-items-center rounded-full bg-white/16 text-white backdrop-blur-lg transition hover:bg-white hover:text-black"><Play size={16} fill="currentColor" /></button>
-          </div>
-          <div className="absolute bottom-0 left-0 right-0 p-6 text-white md:p-9">
-            <p className="mb-2 text-xs font-bold uppercase tracking-[.19em] text-white/60">Serin · Sep 12 · Seoul</p>
-            <h2 className="text-4xl font-semibold tracking-[-0.055em] md:text-6xl">BLACK NIGHT</h2>
-            <div className="mt-5 flex items-center justify-between border-t border-white/25 pt-5">
-              <span className="text-sm text-white/70">Special Fan Meeting</span>
-              <Link href="/projects/serin-black-night" className="rounded-full bg-[#ffb9cf] px-5 py-3 text-sm font-bold text-black">View project</Link>
-            </div>
-          </div>
-        </motion.div>
       </div>
     </section>
   );
