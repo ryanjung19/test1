@@ -1,6 +1,6 @@
 "use client";
 
-import { Menu, Search, Ticket, X } from "lucide-react";
+import { ChevronDown, Menu, Search, X } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
 import { AnimatePresence, motion } from "motion/react";
@@ -9,7 +9,7 @@ const nav = [
   ["/", "Home"],
   ["/#projects", "Projects"],
   ["/#creators", "Creators"],
-  ["/work", "Work with us"]
+  ["/#about", "About"]
 ];
 
 export function SiteHeader() {
@@ -17,41 +17,50 @@ export function SiteHeader() {
 
   return (
     <>
-      <header className="fixed inset-x-0 top-0 z-50 px-4 pt-4 md:px-8 md:pt-6">
-        <div className="frosted mx-auto flex max-w-7xl items-center justify-between rounded-full px-4 py-3 shadow-[0_12px_40px_rgba(0,0,0,.06)] md:px-6">
-          <Link href="/" className="flex items-end gap-2">
-            <span className="text-[21px] font-black tracking-[-0.08em]">MEET<span className="text-[#ff8db4]">SET</span></span>
-            <span className="hidden pb-[2px] text-[9px] font-semibold uppercase tracking-[0.22em] text-black/40 sm:block">Fan Meets Real Moments</span>
+      <header className="fixed inset-x-0 top-0 z-50 border-b border-black/[0.06] bg-white/92 backdrop-blur-xl">
+        <div className="mx-auto flex h-[72px] max-w-[1480px] items-center justify-between px-5 md:h-[78px] md:px-10">
+          <Link href="/" className="flex flex-col leading-none">
+            <span className="text-[24px] font-black tracking-[-0.085em] md:text-[27px]">MEET<span className="text-[#ff7fa9]">SET</span></span>
+            <span className="mt-1 text-[9px] font-semibold tracking-[0.18em] text-black/38">FAN MEETS REAL MOMENTS</span>
           </Link>
 
-          <nav className="hidden items-center gap-8 text-sm font-semibold md:flex">
-            {nav.map(([href, label]) => <Link key={href + label} href={href} className="transition-opacity hover:opacity-50">{label}</Link>)}
+          <nav className="hidden items-center gap-9 text-[13px] font-semibold md:flex">
+            {nav.map(([href, label], index) => (
+              <Link key={href + label} href={href} className={`relative py-7 transition-opacity hover:opacity-50 ${index === 0 ? "after:absolute after:inset-x-0 after:bottom-0 after:h-[2px] after:bg-[#ff7fa9]" : ""}`}>
+                {label}
+              </Link>
+            ))}
           </nav>
 
-          <div className="flex items-center gap-2">
-            <button aria-label="Search" className="grid size-10 place-items-center rounded-full transition hover:bg-black/5"><Search size={18} /></button>
-            <Link href="/my" className="hidden rounded-full bg-black px-5 py-2.5 text-sm font-semibold text-white transition hover:scale-[1.02] sm:flex"><Ticket size={16} className="mr-2" />My tickets</Link>
-            <button onClick={() => setOpen(true)} aria-label="Open menu" className="grid size-10 place-items-center rounded-full md:hidden"><Menu size={20} /></button>
+          <div className="flex items-center gap-2 md:gap-4">
+            <button aria-label="Search" className="grid size-9 place-items-center rounded-full transition hover:bg-black/5"><Search size={17} /></button>
+            <button className="hidden items-center gap-1 text-xs font-semibold md:flex">KR <ChevronDown size={13} /></button>
+            <Link href="/my" className="hidden text-xs font-semibold transition-opacity hover:opacity-50 md:block">Log in</Link>
+            <Link href="/work" className="hidden rounded-xl bg-[#ff8db4] px-5 py-3 text-xs font-bold text-black shadow-[0_8px_24px_rgba(255,141,180,.28)] transition hover:-translate-y-0.5 md:block">Sign up</Link>
+            <button onClick={() => setOpen(true)} aria-label="Open menu" className="grid size-10 place-items-center md:hidden"><Menu size={21} /></button>
           </div>
         </div>
       </header>
 
       <AnimatePresence>
         {open && (
-          <motion.div className="fixed inset-0 z-[70] bg-black/30 p-3 backdrop-blur-md md:hidden" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
-            <motion.div initial={{ y: 24, opacity: 0 }} animate={{ y: 0, opacity: 1 }} exit={{ y: 24, opacity: 0 }} transition={{ type: "spring", stiffness: 260, damping: 24 }} className="ml-auto flex h-full w-[88%] max-w-sm flex-col rounded-[32px] bg-[#fffdfb] p-5 soft-shadow">
-              <div className="mb-12 flex items-center justify-between">
-                <span className="text-2xl font-black tracking-[-0.08em]">MEET<span className="text-[#ff8db4]">SET</span></span>
-                <button onClick={() => setOpen(false)} className="grid size-11 place-items-center rounded-full bg-black text-white"><X size={18} /></button>
+          <motion.div className="fixed inset-0 z-[80] bg-black/30 p-3 backdrop-blur-md md:hidden" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+            <motion.div initial={{ x: 24, opacity: 0 }} animate={{ x: 0, opacity: 1 }} exit={{ x: 24, opacity: 0 }} transition={{ type: "spring", stiffness: 300, damping: 28 }} className="ml-auto flex h-full w-[88%] max-w-sm flex-col rounded-[28px] bg-white p-5 shadow-2xl">
+              <div className="mb-10 flex items-center justify-between">
+                <div>
+                  <div className="text-2xl font-black tracking-[-0.085em]">MEET<span className="text-[#ff7fa9]">SET</span></div>
+                  <div className="mt-1 text-[9px] tracking-[.18em] text-black/35">FAN MEETS REAL MOMENTS</div>
+                </div>
+                <button onClick={() => setOpen(false)} className="grid size-10 place-items-center rounded-full bg-black text-white"><X size={18} /></button>
               </div>
-              <div className="flex flex-col gap-1">
+              <div className="flex flex-col">
                 {nav.map(([href, label], index) => (
                   <motion.div key={href + label} initial={{ x: 18, opacity: 0 }} animate={{ x: 0, opacity: 1 }} transition={{ delay: index * .04 }}>
                     <Link onClick={() => setOpen(false)} href={href} className="block border-b border-black/10 py-4 text-3xl font-semibold tracking-[-0.05em]">{label}</Link>
                   </motion.div>
                 ))}
               </div>
-              <Link onClick={() => setOpen(false)} href="/my" className="mt-auto rounded-full bg-[#ffb9cf] px-6 py-4 text-center font-bold">Open my tickets</Link>
+              <Link onClick={() => setOpen(false)} href="/work" className="mt-auto rounded-full bg-[#ff8db4] px-6 py-4 text-center font-bold text-black">Work with MEETSET</Link>
             </motion.div>
           </motion.div>
         )}
