@@ -1,56 +1,59 @@
-# MEETSET V1
+# MEETSET V2
 
-Responsive fan-event commerce prototype for J&Company.
+Premium fan-event commerce product for J&Company.
 
-## Product position
+## Direction
 
-- **MEETSET** is the consumer-facing fan experience brand operated by **J&Company**.
-- Projects can be held at **VASSMENT ONE** or an external venue.
-- VASSMENT ONE is shown as a project venue, not as the core brand.
-- Public funding metrics (goal amount, raised amount, achievement %, supporter spend) are intentionally removed.
+MEETSET is not a venue-rental site. It is the consumer brand for fan meetings, photo events, live projects and showcases operated by J&Company. VASSMENT ONE is the primary Seoul venue, but each project can use another venue when appropriate.
 
-## Implemented in this V1
+## V2 architecture
 
-- Responsive desktop/mobile home page
-- Project browsing and category filters
+This branch moves the prototype from static HTML/CSS/JS to a production-oriented Next.js stack and deliberately reuses open-source event-platform patterns rather than rebuilding common primitives from zero.
+
+- Next.js 16 + React 19 + TypeScript
+- Tailwind CSS 4
+- Motion for React
+- Radix UI primitives
+- Lucide icons
+- QR generation + html5-qrcode scanner dependency
+- OpenLuma MIT-licensed architecture used as a reference for event/ticket/check-in flows
+
+See `THIRD_PARTY_NOTICES.md` for attribution.
+
+## Implemented in this V2 branch
+
+- Editorial, high-end responsive homepage
+- Animated navigation and mobile drawer
+- Mobile bottom navigation
+- Project gallery with motion and status states
 - Project detail page
 - GENERAL / VIP / VVIP ticket tiers
-- Experience add-ons (Cheki, premium Cheki, photo session, 1:1 talk, voice message, signed photo)
-- Demo checkout flow
-- Demo QR ticket generation and `MY` ticket storage via localStorage
-- Creator list
-- Work with MEETSET / Host a Project lead form UI
-- J&Company operator disclosure placeholders
-- Mobile bottom navigation and drawer menu
+- Experience add-ons
+- Live total calculation
+- Mobile QR ticket wallet preview
+- Creator/agency project inquiry page
+- J&Company operating-entity positioning
+- VASSMENT ONE modeled as a project venue rather than the MEETSET brand
 
-## Not production-connected yet
+## Next production connections
 
-- Real J&Company PG account
-- Authentication / member database
-- Order, refund and settlement backend
-- CRM API for project proposals
-- Admin project/P&L dashboard
-- Production business registration / mail-order registration information
-- Actual creator and event photography/content
+1. J&Company PG / Toss Payments adapter
+2. Order + payment verification backend
+3. Customer authentication and ticket persistence
+4. Refund rules engine
+5. QR validation/check-in API
+6. Admin dashboard and project P&L
+7. Creator contracts / settlement
+8. CRM endpoint for project inquiries
+9. Production photography and business/legal details
 
-## Run
-
-No build step is required for this first UI prototype.
+## Local run
 
 ```bash
-python3 -m http.server 8080
+npm install
+npm run dev
 ```
 
-Then open `http://localhost:8080`.
+Production build validation is handled by `.github/workflows/v2-build.yml`.
 
-## Next implementation phase
-
-1. Production project/creator content model
-2. Order/payment adapter and refund rules
-3. QR ticket validation/check-in API
-4. J&Company admin dashboard
-5. Project-level P&L / break-even / settlement
-6. CRM lead ingestion
-7. GA4 / ad pixel events
-
-Branch: `feat/meetset-v1`
+Branch: `feat/meetset-v2-openluma`
