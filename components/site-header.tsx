@@ -17,7 +17,7 @@ export function SiteHeader() {
 
   return (
     <>
-      <header className="fixed inset-x-0 top-0 z-50 border-b border-black/[0.06] bg-white/92 backdrop-blur-xl">
+      <header className="reference-header fixed inset-x-0 top-0 z-50">
         <div className="mx-auto flex h-[72px] max-w-[1480px] items-center justify-between px-5 md:h-[78px] md:px-10">
           <Link href="/" className="flex flex-col leading-none">
             <span className="text-[24px] font-black tracking-[-0.085em] md:text-[27px]">MEET<span className="text-[#ff7fa9]">SET</span></span>
@@ -33,11 +33,11 @@ export function SiteHeader() {
           </nav>
 
           <div className="flex items-center gap-2 md:gap-4">
-            <button aria-label="Search" className="grid size-9 place-items-center rounded-full transition hover:bg-black/5"><Search size={17} /></button>
+            <button aria-label="Search" className="grid size-9 place-items-center rounded-full transition hover:bg-white/45"><Search size={17} /></button>
             <button className="hidden items-center gap-1 text-xs font-semibold md:flex">KR <ChevronDown size={13} /></button>
             <Link href="/my" className="hidden text-xs font-semibold transition-opacity hover:opacity-50 md:block">Log in</Link>
             <Link href="/work" className="hidden rounded-xl bg-[#ff8db4] px-5 py-3 text-xs font-bold text-black shadow-[0_8px_24px_rgba(255,141,180,.28)] transition hover:-translate-y-0.5 md:block">Sign up</Link>
-            <button onClick={() => setOpen(true)} aria-label="Open menu" className="grid size-10 place-items-center md:hidden"><Menu size={21} /></button>
+            <button onClick={() => setOpen(true)} aria-label="Open menu" className="grid size-10 place-items-center rounded-full transition hover:bg-white/45 md:hidden"><Menu size={21} /></button>
           </div>
         </div>
       </header>
@@ -45,7 +45,7 @@ export function SiteHeader() {
       <AnimatePresence>
         {open && (
           <motion.div className="fixed inset-0 z-[80] bg-black/30 p-3 backdrop-blur-md md:hidden" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
-            <motion.div initial={{ x: 24, opacity: 0 }} animate={{ x: 0, opacity: 1 }} exit={{ x: 24, opacity: 0 }} transition={{ type: "spring", stiffness: 300, damping: 28 }} className="ml-auto flex h-full w-[88%] max-w-sm flex-col rounded-[28px] bg-white p-5 shadow-2xl">
+            <motion.div initial={{ x: 24, opacity: 0 }} animate={{ x: 0, opacity: 1 }} exit={{ x: 24, opacity: 0 }} transition={{ type: "spring", stiffness: 300, damping: 28 }} className="ml-auto flex h-full w-[88%] max-w-sm flex-col rounded-[28px] bg-white/95 p-5 shadow-2xl backdrop-blur-2xl">
               <div className="mb-10 flex items-center justify-between">
                 <div>
                   <div className="text-2xl font-black tracking-[-0.085em]">MEET<span className="text-[#ff7fa9]">SET</span></div>
