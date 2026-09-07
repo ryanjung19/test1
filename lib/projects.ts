@@ -114,6 +114,28 @@ export const projects: Project[] = [
     ],
     tickets: [],
     experiences: []
+  },
+  {
+    slug: "yuna-sweet-moment",
+    creator: "YUNA",
+    title: "SWEET MOMENT",
+    eyebrow: "SPECIAL PROJECT",
+    date: "AUG 15 · 4:00 PM",
+    venue: "VASSMENT ONE",
+    city: "SEOUL",
+    category: "SPECIAL",
+    status: "SOLD OUT",
+    image: "https://images.unsplash.com/photo-1529139574466-a303027c1d8b?auto=format&fit=crop&w=1200&q=90",
+    hero: "https://images.unsplash.com/photo-1529139574466-a303027c1d8b?auto=format&fit=crop&w=1800&q=92",
+    description: "A completed intimate fan project preserved as part of the MEETSET portfolio.",
+    program: [
+      { time: "16:00", title: "OPEN" },
+      { time: "16:30", title: "TALK" },
+      { time: "17:10", title: "PHOTO SESSION" },
+      { time: "18:00", title: "CLOSING" }
+    ],
+    tickets: [],
+    experiences: []
   }
 ];
 
