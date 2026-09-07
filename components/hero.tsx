@@ -7,20 +7,20 @@ import Link from "next/link";
 
 export function Hero() {
   return (
-    <section className="relative overflow-hidden pt-[72px] md:pt-[78px]">
-      <div className="relative min-h-[610px] w-full overflow-hidden bg-[#111] md:min-h-[760px]">
+    <section className="relative overflow-hidden">
+      <div className="relative min-h-[620px] w-full overflow-hidden bg-[#111] md:min-h-[760px]">
         <Image
           src="https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&w=2200&q=94"
           alt="Featured MEETSET creator"
           fill
           priority
-          className="object-cover object-[58%_38%] md:object-[62%_40%]"
+          className="object-cover object-[58%_28%] md:object-[62%_34%]"
           sizes="100vw"
         />
-        <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(8,8,12,.78)_0%,rgba(8,8,12,.58)_27%,rgba(8,8,12,.12)_58%,rgba(8,8,12,.12)_100%)]" />
-        <div className="absolute inset-x-0 bottom-0 h-40 bg-gradient-to-t from-black/35 to-transparent" />
+        <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(8,8,12,.70)_0%,rgba(8,8,12,.48)_28%,rgba(8,8,12,.10)_58%,rgba(8,8,12,.08)_100%)]" />
+        <div className="absolute inset-x-0 bottom-0 h-40 bg-gradient-to-t from-black/30 to-transparent" />
 
-        <div className="relative z-10 mx-auto flex min-h-[610px] max-w-[1480px] flex-col justify-center px-6 pb-20 pt-20 text-white md:min-h-[760px] md:px-10 md:pb-24">
+        <div className="relative z-10 mx-auto flex min-h-[620px] max-w-[1480px] flex-col justify-center px-6 pb-20 pt-24 text-white md:min-h-[760px] md:px-10 md:pb-24 md:pt-28">
           <motion.div initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ duration: .7 }} className="max-w-[680px]">
             <p className="mb-4 text-[11px] font-bold uppercase tracking-[0.23em] text-white/80 md:text-[13px]">Special fan meeting</p>
             <h1 className="max-w-[640px] text-[62px] font-light leading-[.9] tracking-[-0.065em] sm:text-[74px] md:text-[98px] lg:text-[112px]">
