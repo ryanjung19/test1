@@ -1,8 +1,9 @@
 "use client";
 
+import Link from "next/link";
 import { useMemo, useState } from "react";
 
-type Screen = "landing" | "login" | "hot" | "detail" | "watchlist" | "alerts" | "settings" | "subscription";
+type Screen = "hot" | "detail" | "watchlist" | "alerts" | "settings" | "subscription";
 type Stock = {
   rank: number;
   code: string;
@@ -37,7 +38,7 @@ function formatWon(value: number) {
 }
 
 export default function Home() {
-  const [screen, setScreen] = useState<Screen>("landing");
+  const [screen, setScreen] = useState<Screen>("hot");
   const [selected, setSelected] = useState<Stock>(stocks[0]);
   const [market, setMarket] = useState<"ALL" | "KOSPI" | "KOSDAQ">("ALL");
   const [sort, setSort] = useState<"change" | "volume">("change");
@@ -55,18 +56,10 @@ export default function Home() {
     setScreen("detail");
   };
 
-  if (screen === "landing") {
-    return <Landing onStart={() => setScreen("login")} onDemo={() => setScreen("hot")} />;
-  }
-
-  if (screen === "login") {
-    return <Login onBack={() => setScreen("landing")} onLogin={() => setScreen("hot")} />;
-  }
-
   return (
     <div className="app-shell">
       <aside className="sidebar">
-        <Logo />
+        <Link href="/"><Logo /></Link>
         <div className="demo-badge">DEMO · 샘플 데이터</div>
         <nav className="side-nav">
           {navItems.map((item) => (
@@ -83,15 +76,16 @@ export default function Home() {
 
       <main className="main-panel">
         <header className="topbar">
-          <div className="mobile-logo"><Logo /></div>
+          <div className="mobile-logo"><Link href="/"><Logo /></Link></div>
           <div className="searchbox">⌕ <span>종목명, 종목코드 검색</span></div>
           <div className="top-actions">
             <button className="icon-button" onClick={() => setScreen("alerts")}>●</button>
-            <button className="profile" onClick={() => setScreen("subscription")}><span>김</span><b>PREMIUM</b></button>
+            <button className="profile" onClick={() => setScreen("subscription")}><span>SP</span><b>DEMO</b></button>
           </div>
         </header>
 
         <section className="content-area">
+          <div className="preview-note">DEMO · 모든 시세·알림·구독 상태는 샘플입니다. <Link href="/auth">실제 계정 로그인</Link></div>
           {screen === "hot" && (
             <HotScreen stocks={filteredStocks} market={market} setMarket={setMarket} sort={sort} setSort={setSort} onOpen={openStock} />
           )}
@@ -122,61 +116,10 @@ function Logo() {
   return <div className="logo"><span className="logo-mark">SP</span><strong>StockPulse</strong></div>;
 }
 
-function Landing({ onStart, onDemo }: { onStart: () => void; onDemo: () => void }) {
-  return (
-    <div className="landing">
-      <header className="landing-header"><Logo /><nav><a href="#features">기능</a><a href="#pricing">요금제</a><button className="ghost" onClick={onDemo}>데모 보기</button><button className="primary small" onClick={onStart}>시작하기</button></nav></header>
-      <main>
-        <section className="hero">
-          <div className="hero-copy">
-            <div className="eyebrow">REAL-TIME MARKET MOVE ALERT</div>
-            <h1>지금 움직이는 종목을<br /><em>더 빠르게 확인하세요.</em></h1>
-            <p>가격·거래량의 이상 움직임을 감지하고 관련 뉴스와 공시를 한 화면에 연결합니다.</p>
-            <div className="hero-actions"><button className="primary" onClick={onStart}>무료로 시작하기 →</button><button className="ghost" onClick={onDemo}>서비스 화면 보기</button></div>
-            <div className="hero-note">매수·매도 권유가 아닌 시장 정보 탐지 서비스</div>
-          </div>
-          <div className="phone-card">
-            <div className="phone-top"><Logo /><span>10:14</span></div>
-            <div className="push-card"><span className="fire">●</span><div><b>급상승 감지</b><strong>한화오션 <em>+15.8%</em></strong><p>가격 상승과 거래량 급증이 감지되었습니다.</p></div></div>
-            <div className="mini-list"><div><b>STX엔진</b><em>+14.2%</em></div><div><b>에코프로비엠</b><em>+12.3%</em></div><div><b>루닛</b><em>+11.9%</em></div></div>
-          </div>
-        </section>
-        <section id="features" className="feature-strip">
-          <article><span>01</span><b>급상승 감지</b><p>가격 변화 속도를 실시간 감시</p></article>
-          <article><span>02</span><b>거래량 급증</b><p>평균 대비 비정상 거래량 확인</p></article>
-          <article><span>03</span><b>왜 움직이나?</b><p>관련 뉴스와 공시를 빠르게 연결</p></article>
-          <article><span>04</span><b>즉시 알림</b><p>PC와 모바일에서 같은 계정으로 확인</p></article>
-        </section>
-        <section id="pricing" className="simple-pricing"><div><span>FREE</span><h2>먼저 확인해보세요.</h2><p>일부 급상승 종목과 기본 시장 화면 제공</p></div><div className="premium-card"><span>PREMIUM</span><h2>모든 알림을 한 번에.</h2><p>전체 급상승 · 거래량 급증 · 원인 확인 · 알림 이력</p><button className="primary" onClick={onStart}>시작하기</button></div></section>
-      </main>
-    </div>
-  );
-}
-
-function Login({ onBack, onLogin }: { onBack: () => void; onLogin: () => void }) {
-  return (
-    <div className="login-page">
-      <button className="back-link" onClick={onBack}>← 처음으로</button>
-      <div className="login-card">
-        <Logo />
-        <h1>시장 움직임을<br />빠르게 확인하세요.</h1>
-        <p>하나의 계정으로 PC와 모바일에서 사용할 수 있습니다.</p>
-        <button className="kakao" onClick={onLogin}>카카오로 계속하기</button>
-        <button className="social" onClick={onLogin}>G&nbsp;&nbsp; Google로 계속하기</button>
-        <div className="divider"><span>또는</span></div>
-        <label>이메일<input type="email" placeholder="name@example.com" /></label>
-        <label>비밀번호<input type="password" placeholder="••••••••" /></label>
-        <button className="primary wide" onClick={onLogin}>로그인</button>
-        <small>데모에서는 실제 계정이 생성되지 않습니다.</small>
-      </div>
-    </div>
-  );
-}
-
 function HotScreen({ stocks, market, setMarket, sort, setSort, onOpen }: { stocks: Stock[]; market: "ALL" | "KOSPI" | "KOSDAQ"; setMarket: (v: "ALL" | "KOSPI" | "KOSDAQ") => void; sort: "change" | "volume"; setSort: (v: "change" | "volume") => void; onOpen: (stock: Stock) => void }) {
   return (
     <>
-      <div className="page-heading"><div><div className="eyebrow dark">LIVE MARKET</div><h1>지금 급상승</h1><p>가격·거래량 이상 움직임을 감지한 종목입니다.</p></div><div className="live-pill"><span /> 장중 감지 중</div></div>
+      <div className="page-heading"><div><div className="eyebrow dark">DEMO MARKET</div><h1>지금 급상승</h1><p>가격·거래량 이상 움직임을 감지한 종목입니다.</p></div><div className="live-pill"><span /> 샘플 데이터</div></div>
       <div className="signal-banner"><div><b>급상승 종목을 자동 감지하고 있습니다.</b><p>현재 화면의 숫자는 UI 검증을 위한 샘플 데이터입니다.</p></div><span>DEMO</span></div>
       <div className="filterbar"><div>{(["ALL", "KOSPI", "KOSDAQ"] as const).map((item) => <button key={item} className={market === item ? "active" : ""} onClick={() => setMarket(item)}>{item === "ALL" ? "전체" : item}</button>)}</div><div><button className={sort === "change" ? "active" : ""} onClick={() => setSort("change")}>등락률순</button><button className={sort === "volume" ? "active" : ""} onClick={() => setSort("volume")}>거래량순</button></div></div>
       <div className="stock-table-wrap">
@@ -193,7 +136,7 @@ function DetailScreen({ stock, watched, onToggleWatch, onBack }: { stock: Stock;
       <button className="back-link inside" onClick={onBack}>← 급상승 목록</button>
       <div className="detail-head"><div><div className="ticker-line"><span>{stock.market}</span><span>{stock.code}</span></div><h1>{stock.name}</h1><div className="headline-price"><strong>{formatWon(stock.price)}원</strong><em>+{stock.change}%</em></div><p>마지막 감지 · {stock.detected}</p></div><button className="watch-button" onClick={onToggleWatch}>{watched ? "★ 관심종목" : "☆ 관심종목 추가"}</button></div>
       <div className="detail-grid">
-        <article className="panel chart-panel"><div className="panel-title"><div><span>오늘 가격 움직임</span><small>샘플 차트</small></div><span className="live-pill compact"><i />LIVE</span></div><svg viewBox="0 0 600 220" className="chart" role="img" aria-label="샘플 가격 상승 차트"><defs><linearGradient id="area" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stopColor="#ef4d57" stopOpacity="0.25"/><stop offset="100%" stopColor="#ef4d57" stopOpacity="0"/></linearGradient></defs><path d="M15 182 L65 167 L100 170 L135 143 L180 151 L218 113 L258 125 L300 88 L350 101 L389 69 L430 83 L474 47 L520 58 L578 24 L578 210 L15 210 Z" fill="url(#area)"/><polyline points="15,182 65,167 100,170 135,143 180,151 218,113 258,125 300,88 350,101 389,69 430,83 474,47 520,58 578,24" fill="none" stroke="#ef4d57" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round"/><circle cx="578" cy="24" r="7" fill="#ef4d57"/></svg><div className="chart-axis"><span>09:00</span><span>10:30</span><span>12:00</span><span>13:30</span><span>15:30</span></div></article>
+        <article className="panel chart-panel"><div className="panel-title"><div><span>오늘 가격 움직임</span><small>샘플 차트</small></div><span className="live-pill compact"><i />DEMO</span></div><svg viewBox="0 0 600 220" className="chart" role="img" aria-label="샘플 가격 상승 차트"><defs><linearGradient id="area" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stopColor="#ef4d57" stopOpacity="0.25"/><stop offset="100%" stopColor="#ef4d57" stopOpacity="0"/></linearGradient></defs><path d="M15 182 L65 167 L100 170 L135 143 L180 151 L218 113 L258 125 L300 88 L350 101 L389 69 L430 83 L474 47 L520 58 L578 24 L578 210 L15 210 Z" fill="url(#area)"/><polyline points="15,182 65,167 100,170 135,143 180,151 218,113 258,125 300,88 350,101 389,69 430,83 474,47 520,58 578,24" fill="none" stroke="#ef4d57" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round"/><circle cx="578" cy="24" r="7" fill="#ef4d57"/></svg><div className="chart-axis"><span>09:00</span><span>10:30</span><span>12:00</span><span>13:30</span><span>15:30</span></div></article>
         <article className="panel why-panel"><div className="panel-title"><div><span>왜 움직이나?</span><small>자동 수집 정보 요약 영역</small></div></div><div className="reason-box"><span>01</span><div><b>가격·거래량 동시 상승</b><p>{stock.reason}</p></div></div><div className="reason-box"><span>02</span><div><b>관련 뉴스 발견</b><p>급격한 움직임 직전 공개된 관련 기사를 연결합니다.</p></div></div><div className="reason-box"><span>03</span><div><b>공시 확인</b><p>DART 연동 후 관련 공시 여부를 자동 표시합니다.</p></div></div></article>
       </div>
       <div className="metrics"><div><small>등락률</small><b className="rise">+{stock.change}%</b></div><div><small>거래량 증가</small><b>{stock.volumeMultiple.toFixed(1)}×</b></div><div><small>거래대금</small><b>{formatWon(stock.tradingValue)}억</b></div><div><small>감지 시각</small><b>{stock.detected}</b></div></div>
@@ -218,7 +161,7 @@ function AlertsScreen({ onOpen }: { onOpen: (stock: Stock) => void }) {
 
 function SettingsScreen({ alerts, setAlerts }: { alerts: { rapid: boolean; volume: boolean; news: boolean; quiet: boolean }; setAlerts: (value: { rapid: boolean; volume: boolean; news: boolean; quiet: boolean }) => void }) {
   const toggle = (key: keyof typeof alerts) => setAlerts({ ...alerts, [key]: !alerts[key] });
-  return <><div className="page-heading"><div><div className="eyebrow dark">NOTIFICATIONS</div><h1>알림 설정</h1><p>받고 싶은 시장 움직임만 선택할 수 있습니다.</p></div></div><div className="settings-grid"><article className="panel"><h2>알림 유형</h2><Toggle label="급상승 감지" desc="짧은 시간 동안 가격 움직임이 확대된 종목" checked={alerts.rapid} onClick={() => toggle("rapid")} /><Toggle label="거래량 급증" desc="평균 대비 거래량이 크게 증가한 종목" checked={alerts.volume} onClick={() => toggle("volume")} /><Toggle label="뉴스·공시 동반" desc="시장 움직임과 관련 정보가 함께 발견된 경우" checked={alerts.news} onClick={() => toggle("news")} /></article><article className="panel"><h2>수신 환경</h2><div className="device-card"><span>PC</span><div><b>Chrome / Edge</b><p>브라우저 Push 사용 예정</p></div><em>연결</em></div><div className="device-card"><span>모바일</span><div><b>iPhone / Android</b><p>PWA 설치 후 Push 수신</p></div><em>연결</em></div><Toggle label="야간 알림 끄기" desc="설정 시간에는 알림을 보내지 않습니다." checked={alerts.quiet} onClick={() => toggle("quiet")} /></article></div></>;
+  return <><div className="page-heading"><div><div className="eyebrow dark">NOTIFICATIONS</div><h1>알림 설정</h1><p>받고 싶은 시장 움직임만 선택할 수 있습니다.</p></div></div><div className="settings-grid"><article className="panel"><h2>알림 유형</h2><Toggle label="급상승 감지" desc="짧은 시간 동안 가격 움직임이 확대된 종목" checked={alerts.rapid} onClick={() => toggle("rapid")} /><Toggle label="거래량 급증" desc="평균 대비 거래량이 크게 증가한 종목" checked={alerts.volume} onClick={() => toggle("volume")} /><Toggle label="뉴스·공시 동반" desc="시장 움직임과 관련 정보가 함께 발견된 경우" checked={alerts.news} onClick={() => toggle("news")} /></article><article className="panel"><h2>수신 환경</h2><div className="device-card"><span>PC</span><div><b>Chrome / Edge</b><p>브라우저 Push 사용 예정</p></div><em>DEMO</em></div><div className="device-card"><span>모바일</span><div><b>iPhone / Android</b><p>PWA 설치 후 Push 수신</p></div><em>DEMO</em></div><Toggle label="야간 알림 끄기" desc="설정 시간에는 알림을 보내지 않습니다." checked={alerts.quiet} onClick={() => toggle("quiet")} /></article></div></>;
 }
 
 function Toggle({ label, desc, checked, onClick }: { label: string; desc: string; checked: boolean; onClick: () => void }) {
@@ -226,5 +169,5 @@ function Toggle({ label, desc, checked, onClick }: { label: string; desc: string
 }
 
 function SubscriptionScreen() {
-  return <><div className="page-heading"><div><div className="eyebrow dark">ACCOUNT</div><h1>구독 관리</h1><p>현재 플랜과 결제 상태를 확인합니다.</p></div></div><div className="subscription-grid"><article className="panel plan-card"><div className="plan-head"><div><span>PREMIUM</span><h2>프리미엄 구독</h2></div><span className="status">ACTIVE</span></div><div className="plan-info"><div><small>현재 플랜</small><b>Premium</b></div><div><small>결제 금액</small><b>가격 미정 · DEMO</b></div><div><small>다음 결제일</small><b>결제 연동 후 표시</b></div><div><small>결제 수단</small><b>PortOne + Toss 예정</b></div></div><div className="plan-actions"><button className="ghost">결제수단 변경</button><button className="danger-ghost">구독 해지</button></div></article><article className="panel"><h2>계정</h2><div className="account-line"><span>로그인</span><b>demo@stockpulse.kr</b></div><div className="account-line"><span>연결 기기</span><b>PC 1 · 모바일 1</b></div><div className="account-line"><span>회원 상태</span><b>Premium</b></div><button className="ghost wide">개인정보 및 약관 관리</button></article></div></>;
+  return <><div className="page-heading"><div><div className="eyebrow dark">ACCOUNT</div><h1>구독 관리</h1><p>현재 플랜과 결제 상태를 확인합니다.</p></div></div><div className="subscription-grid"><article className="panel plan-card"><div className="plan-head"><div><span>PREMIUM</span><h2>프리미엄 구독</h2></div><span className="status">DEMO</span></div><div className="plan-info"><div><small>현재 플랜</small><b>Premium</b></div><div><small>결제 금액</small><b>가격 미정 · DEMO</b></div><div><small>다음 결제일</small><b>결제 연동 후 표시</b></div><div><small>결제 수단</small><b>PortOne + Toss 예정</b></div></div><div className="plan-actions"><button className="ghost">결제수단 변경</button><button className="danger-ghost">구독 해지</button></div></article><article className="panel"><h2>계정</h2><div className="account-line"><span>로그인</span><b>demo@stockpulse.kr</b></div><div className="account-line"><span>연결 기기</span><b>PC 1 · 모바일 1</b></div><div className="account-line"><span>회원 상태</span><b>Premium</b></div><button className="ghost wide">개인정보 및 약관 관리</button></article></div></>;
 }

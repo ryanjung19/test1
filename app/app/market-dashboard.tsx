@@ -60,7 +60,7 @@ export default function MarketDashboard({ userEmail }: { userEmail: string }) {
     <div className="app-shell">
       <aside className="sidebar">
         <div className="logo"><span className="logo-mark">SP</span><strong>StockPulse</strong></div>
-        <div className="demo-badge">{payload?.mode === "demo" ? "DEMO DATA" : "LIVE DATA"}</div>
+        <div className="demo-badge">{!payload ? "연결 확인 중" : payload.mode === "demo" ? "DEMO DATA" : "시장 데이터"}</div>
         <nav className="side-nav">
           <button className="active"><span>↗</span>급상승</button>
           <Link href="/account" className="sidebar-link"><span>◎</span>내 계정</Link>
@@ -81,11 +81,11 @@ export default function MarketDashboard({ userEmail }: { userEmail: string }) {
         <section className="content-area">
           <div className="page-heading">
             <div><div className="eyebrow dark">MEMBER DASHBOARD</div><h1>지금 급상승</h1><p>가격·거래량 이상 움직임을 감지한 종목입니다.</p></div>
-            <div className="live-pill"><span /> {payload ? "데이터 연결됨" : "불러오는 중"}</div>
+            <div className="live-pill"><span /> {payload ? "데이터 연결됨" : error ? "연결 실패" : "불러오는 중"}</div>
           </div>
 
           <div className="signal-banner">
-            <div><b>{payload?.mode === "demo" ? "현재는 데모 Market Adapter를 사용합니다." : "시장 데이터가 연결되어 있습니다."}</b><p>실제 공급자 계약 후 Adapter만 교체하면 같은 화면을 그대로 사용합니다.</p></div>
+            <div><b>{!payload ? "시장 데이터 연결을 확인하고 있습니다." : payload.mode === "demo" ? "DEMO · 샘플 데이터입니다." : "시장 데이터가 연결되어 있습니다."}</b><p>표시된 가격과 거래량의 기준 시각 및 출처를 확인해 주세요.</p></div>
             <span>{payload?.source ?? "LOADING"}</span>
           </div>
 
