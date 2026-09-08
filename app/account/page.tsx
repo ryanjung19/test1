@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { signOut } from "./actions";
 import styles from "./account.module.css";
+import { hasPremium } from "@/lib/auth/access";
 
 export const dynamic = "force-dynamic";
 
@@ -34,16 +35,20 @@ export default async function AccountPage() {
 
   const { data: profile } = await supabase
     .from("profiles")
-    .select("plan, created_at")
+    .select("created_at")
     .eq("user_id", user.id)
     .maybeSingle();
+
+  let premium = false;
+  let entitlementAvailable = true;
+  try { premium = await hasPremium(supabase); } catch { entitlementAvailable = false; }
 
   return (
     <main className={styles.page}>
       <section className={styles.card}>
         <div className={styles.topline}>
           <Link href="/" className={styles.logo}><span>SP</span><b>StockPulse</b></Link>
-          <span className={styles.badge}>{profile?.plan === "premium" ? "PREMIUM" : "FREE"}</span>
+          <span className={styles.badge}>{!entitlementAvailable ? "확인 불가" : premium ? "PREMIUM" : "FREE"}</span>
         </div>
         <h1>내 계정</h1>
         <p className={styles.lead}>PC와 모바일에서 동일한 계정·관심종목·알림설정을 사용합니다.</p>
@@ -51,12 +56,12 @@ export default async function AccountPage() {
         <dl className={styles.details}>
           <div><dt>이메일</dt><dd>{user.email ?? "-"}</dd></div>
           <div><dt>회원 ID</dt><dd>{user.id}</dd></div>
-          <div><dt>현재 플랜</dt><dd>{profile?.plan === "premium" ? "PREMIUM" : "FREE"}</dd></div>
+          <div><dt>서비스 이용권</dt><dd>{!entitlementAvailable ? "잠시 후 다시 확인해 주세요." : premium ? "PREMIUM" : "유료 구독 권한 없음"}</dd></div>
           <div><dt>가입 시각</dt><dd>{profile?.created_at ? new Date(profile.created_at).toLocaleString("ko-KR") : "프로필 생성 대기"}</dd></div>
         </dl>
 
         <div className={styles.actions}>
-          <Link href="/" className={styles.primary}>서비스 화면으로</Link>
+          <Link href="/app" className={styles.primary}>서비스 화면으로</Link>
           <form action={signOut}><button type="submit" className={styles.secondary}>로그아웃</button></form>
         </div>
       </section>
