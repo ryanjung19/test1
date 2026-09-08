@@ -4,6 +4,8 @@ import { createClient } from "@/lib/supabase/server";
 import { signOut } from "./actions";
 import styles from "./account.module.css";
 import { hasPremium } from "@/lib/auth/access";
+import AccountControls from "./controls";
+import { documents } from "@/lib/consent/documents";
 
 export const dynamic = "force-dynamic";
 
@@ -64,6 +66,7 @@ export default async function AccountPage() {
           <Link href="/app" className={styles.primary}>서비스 화면으로</Link>
           <form action={signOut}><button type="submit" className={styles.secondary}>로그아웃</button></form>
         </div>
+        <AccountControls versions={{ terms: documents.terms.version, privacy: documents.privacy.version }} />
       </section>
     </main>
   );

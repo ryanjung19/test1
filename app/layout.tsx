@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import "./globals.css";
+import "./operations.css";
 
 export const metadata: Metadata = {
   title: "StockPulse — 급상승 종목 알림",
