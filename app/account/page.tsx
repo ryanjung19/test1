@@ -53,7 +53,7 @@ export default async function AccountPage() {
           <span className={styles.badge}>{!entitlementAvailable ? "확인 불가" : premium ? "PREMIUM" : "FREE"}</span>
         </div>
         <h1>내 계정</h1>
-        <p className={styles.lead}>PC와 모바일에서 동일한 계정·관심종목·알림설정을 사용합니다.</p>
+        <p className={styles.lead}>계정과 서비스 이용권을 확인하고 이 기기의 알림을 관리합니다. DEMO 관심종목은 기기 간 동기화되지 않습니다.</p>
 
         <dl className={styles.details}>
           <div><dt>이메일</dt><dd>{user.email ?? "-"}</dd></div>

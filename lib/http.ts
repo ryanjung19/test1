@@ -9,7 +9,16 @@ export function failure(error: unknown) {
   return json({ error: "service_unavailable" }, 503);
 }
 export function requireSameOrigin(request: Request) {
-  if (request.headers.get("origin") !== new URL(request.url).origin) throw new AccessError(403, "invalid_origin");
+  if (request.headers.get("origin") !== requestOrigin(request)) throw new AccessError(403, "invalid_origin");
+}
+export function requestOrigin(request: Request) {
+  const url = new URL(request.url);
+  const host = request.headers.get("host") ?? url.host;
+  if (/[\s/\\@?#]/.test(host)) throw new AccessError(403, "invalid_origin");
+  // The hosting proxy must overwrite forwarded protocol; never trust forwarded host.
+  const forwardedProtocol = request.headers.get("x-forwarded-proto");
+  const protocol = forwardedProtocol === "https" || forwardedProtocol === "http" ? `${forwardedProtocol}:` : url.protocol;
+  return new URL(`${protocol}//${host}`).origin;
 }
 export async function readJson(request: Request, limit = 8192): Promise<unknown> {
   const raw = await readBody(request, limit);

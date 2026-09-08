@@ -9,7 +9,8 @@ beforeAll(async () => {
   await db.exec(`create role anon; create role authenticated; create role service_role bypassrls;
     create schema auth; create table auth.users (id uuid primary key);
     create function auth.uid() returns uuid language sql stable as $$ select nullif(current_setting('request.jwt.claim.sub', true), '')::uuid $$;
-    grant usage on schema public, auth to anon, authenticated, service_role;`);
+    grant usage on schema public, auth to anon, authenticated, service_role;
+    alter default privileges in schema public grant all on tables to anon,authenticated,service_role;`);
   for (const file of readdirSync("supabase/migrations").sort()) {
     await db.exec(readFileSync(`supabase/migrations/${file}`, "utf8").replace("create extension if not exists pgcrypto;", ""));
   }
@@ -90,6 +91,7 @@ test("billing readback checks amount; idempotency and stale events cannot double
   expect((await db.query<{ id: string }>(`select public.receive_billing_event('mock','event-1','Transaction.Paid','payment-1','${"b".repeat(64)}') as id`)).rows[0].id).toBe(id);
   await expect(db.exec(`select public.receive_billing_event('mock','event-1','Transaction.Paid','payment-1','${"c".repeat(64)}')`)).rejects.toThrow("Event content conflict");
   await expect(db.exec(`select public.apply_billing_payment('${id}','order-1','store-1',999,'KRW','paid',now())`)).rejects.toThrow("Payment verification mismatch");
+  await expect(db.exec(`select public.apply_billing_payment('${id}','order-1',null,1000,'KRW','paid',now())`)).rejects.toThrow("Payment verification mismatch");
   await db.exec(`select public.apply_billing_payment('${id}','order-1','store-1',1000,'KRW','paid',now());
     select public.apply_billing_payment('${id}','order-1','store-1',1000,'KRW','paid',now());`);
   expect((await db.query(`select id from public.entitlements where subscription_id='${sub.rows[0].id}'`)).rows).toHaveLength(1);
@@ -115,4 +117,80 @@ test("Push requires entitlement and preferences, and endpoint ownership cannot b
   expect((await db.query<{ result: boolean }>(`select public.can_deliver_push('${bob}','rapid_move') as result`)).rows[0].result).toBe(false);
   await db.exec(`update public.notification_preferences set quiet_hours_enabled=true,quiet_start='00:00',quiet_end='00:00' where user_id='${alice}'`);
   expect((await db.query<{ result: boolean }>(`select public.can_deliver_push('${alice}','rapid_move') as result`)).rows[0].result).toBe(false);
+});
+
+test("Supabase default grants do not leave TRUNCATE on sensitive tables", async () => {
+  for (const table of ["entitlements", "push_deliveries"]) {
+    const result = await db.query<{ allowed: boolean }>("select has_table_privilege('anon',$1,'TRUNCATE') or has_table_privilege('authenticated',$1,'TRUNCATE') as allowed",[`public.${table}`]);
+    expect(result.rows[0].allowed).toBe(false);
+  }
+});
+
+async function renewalFixture(prefix: string) {
+  const userId = crypto.randomUUID();
+  await db.query("insert into auth.users values($1)", [userId]);
+  const sub = (await db.query<{ id: string }>("insert into public.subscriptions(user_id,provider) values($1,'mock') returning id",[userId])).rows[0].id;
+  await db.query(`insert into public.billing_orders(id,subscription_id,provider,payment_id,store_id,amount,period_start,period_end) values
+    ($1,$3,'mock',$1,'test-store',1000,now()-interval '20 days',now()+interval '10 days'),
+    ($2,$3,'mock',$2,'test-store',1000,now()+interval '10 days',now()+interval '40 days')`,[`${prefix}-current`,`${prefix}-next`,sub]);
+  return { userId, sub };
+}
+async function applyOrder(order: string, status: string, hoursAgo: number) {
+  const event = (await db.query<{ id: string }>("select public.receive_billing_event('mock',$1,$2,$3,$4) as id",[crypto.randomUUID(),status,order,"e".repeat(64)])).rows[0].id;
+  return (await db.query<{ result: string }>("select public.apply_billing_payment($1,$2,'test-store',1000,'KRW',$3,$4) as result",[event,order,status,new Date(Date.now()-hoursAgo*3600000).toISOString()])).rows[0].result;
+}
+async function canAccess(userId: string) {
+  await db.exec("set role authenticated");
+  try {
+    await db.query("select set_config('request.jwt.claim.sub',$1,false)",[userId]);
+    return (await db.query<{ result: boolean }>("select public.has_entitlement() as result")).rows[0].result;
+  } finally { await db.exec("reset role"); }
+}
+test("early paid renewal keeps the current paid period accessible", async () => {
+  const { userId } = await renewalFixture("early");
+  await applyOrder("early-current","paid",2);
+  expect(await canAccess(userId)).toBe(true);
+  await applyOrder("early-next","paid",1);
+  expect(await canAccess(userId)).toBe(true);
+});
+test("failed future renewal never revokes the current paid period", async () => {
+  const { userId } = await renewalFixture("failed");
+  await applyOrder("failed-current","paid",2);
+  await applyOrder("failed-next","failed",1);
+  expect(await canAccess(userId)).toBe(true);
+});
+test("late older-order refund is archived without revoking another paid order", async () => {
+  const { userId, sub } = await renewalFixture("late");
+  await db.query("update public.billing_orders set period_start=now()-interval '10 days',period_end=now()+interval '20 days' where id='late-next'");
+  await applyOrder("late-next","paid",1);
+  await applyOrder("late-current","refunded",2);
+  expect((await db.query<{ status: string }>("select status from public.billing_orders where id='late-current'")).rows[0].status).toBe("refunded");
+  expect((await db.query(`select r.id from legal_archive.records r join public.subscriptions s on s.legal_subject_id=r.subject_id where s.id=$1 and r.kind='refund'`,[sub])).rows).toHaveLength(1);
+  expect(await canAccess(userId)).toBe(true);
+});
+
+test("refunding a future renewal preserves the current grant and never resurrects the refunded order", async () => {
+  const { userId, sub } = await renewalFixture("refund");
+  await applyOrder("refund-current","paid",3);
+  await applyOrder("refund-next","paid",2);
+  await applyOrder("refund-next","refunded",1);
+  expect(await canAccess(userId)).toBe(true);
+  expect(await applyOrder("refund-next","paid",0)).toBe("ignored");
+  expect((await db.query("select id from public.entitlements where subscription_id=$1 and revoked_at is null",[sub])).rows).toHaveLength(1);
+});
+test("a refund at the same provider timestamp takes precedence over paid", async () => {
+  const { userId } = await renewalFixture("same-time");
+  const at = new Date(Date.now()-1000).toISOString();
+  for (const status of ["paid","refunded"]) {
+    const event = (await db.query<{ id: string }>("select public.receive_billing_event('mock',$1,$2,'same-time-current',$3) as id",[crypto.randomUUID(),status,"a".repeat(64)])).rows[0].id;
+    await db.query("select public.apply_billing_payment($1,'same-time-current','test-store',1000,'KRW',$2,$3)",[event,status,at]);
+  }
+  expect(await canAccess(userId)).toBe(false);
+});
+test("closed contracts still archive payment evidence but never grant access", async () => {
+  const { userId, sub } = await renewalFixture("closed");
+  await db.query("update public.subscriptions set billing_status='canceled' where id=$1",[sub]);
+  await applyOrder("closed-current","paid",1);
+  expect(await canAccess(userId)).toBe(false);
+  expect((await db.query("select id from legal_archive.records where payload->>'order_id'='closed-current'")).rows).toHaveLength(1);
 });
